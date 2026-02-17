@@ -48,7 +48,9 @@ def create_app(config_name=None):
 
     db.init_app(app)
     mail.init_app(app)
-    CORS(app, supports_credentials=True)
+    CORS(app,
+         supports_credentials=True,
+         origins=["https://homeneeds.onrender.com"])
 
     login_manager = LoginManager()
     login_manager.init_app(app)
