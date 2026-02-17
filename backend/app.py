@@ -9,15 +9,52 @@ from auth import mail, generate_verification_code, send_verification_email
 import os
 
 
+def get_project_paths():
+    """
+    Find template and static folders automatically.
+    Works for local dev, Render.com, and any deployment.
+    """
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(backend_dir)
+
+    # Priority 1: New structure — frontend/pages/ at project root
+    new_templates = os.path.join(project_root, 'frontend', 'pages')
+    new_static = os.path.join(project_root, 'frontend')
+    if os.path.isdir(new_templates) and os.path.isdir(new_static):
+        print(f"[PATHS] Using frontend structure: {new_templates}")
+        return new_templates, new_static
+
+    # Priority 2: Templates inside backend/ folder
+    local_templates = os.path.join(backend_dir, 'templates')
+    local_static = os.path.join(backend_dir, 'static')
+    if os.path.isdir(local_templates):
+        print(f"[PATHS] Using local structure: {local_templates}")
+        return local_templates, local_static
+
+    # Priority 3: Old structure at project root
+    old_templates = os.path.join(project_root, 'templates')
+    old_static = os.path.join(project_root, 'static')
+    if os.path.isdir(old_templates):
+        print(f"[PATHS] Using old structure: {old_templates}")
+        return old_templates, old_static
+
+    # Fallback
+    print(f"[PATHS] WARNING: No template folder found! Tried:")
+    print(f"  - {new_templates}")
+    print(f"  - {local_templates}")
+    print(f"  - {old_templates}")
+    return new_templates, new_static
+
+
 def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'development')
 
+    template_folder, static_folder = get_project_paths()
+
     app = Flask(__name__,
-                template_folder=os.path.join(os.path.dirname(
-                    __file__), '..', 'frontend', 'pages'),
-                static_folder=os.path.join(
-                    os.path.dirname(__file__), '..', 'frontend')
+                template_folder=template_folder,
+                static_folder=static_folder
                 )
 
     app.config.from_object(config_map.get(
@@ -48,7 +85,12 @@ def create_app(config_name=None):
     # ============ HEALTH CHECK ============
     @app.route('/health')
     def health_check():
-        return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()})
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.utcnow().isoformat(),
+            'template_folder': app.template_folder,
+            'static_folder': app.static_folder
+        })
 
     # ============ PWA FILES ============
     @app.route('/manifest.json')
@@ -375,6 +417,21 @@ def create_app(config_name=None):
             ).count(),
         }
 
+    # ============ ASSET LINKS (Play Store TWA) ============
+
+    @app.route('/.well-known/assetlinks.json')
+    def asset_links():
+        return jsonify([{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": os.environ.get('ANDROID_PACKAGE', 'com.homeneeds.app'),
+                "sha256_cert_fingerprints": [
+                    os.environ.get('ANDROID_SHA256', 'YOUR_SHA256_HERE')
+                ]
+            }
+        }])
+
     # ============ ERROR HANDLERS ============
 
     @app.errorhandler(404)
@@ -392,7 +449,7 @@ def create_app(config_name=None):
     return app
 
 
-# Entry point
+# Entry point — gunicorn uses this
 app = create_app()
 
 if __name__ == '__main__':

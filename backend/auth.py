@@ -1,46 +1,42 @@
-# backend/config.py
-import os
+# backend/auth.py
+import random
+import string
+from datetime import datetime, timedelta
+from flask_mail import Mail, Message
+
+mail = Mail()
 
 
-class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'change-this-in-production'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    # Email
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
+def generate_verification_code():
+    return ''.join(random.choices(string.digits, k=6))
 
 
-class DevelopmentConfig(Config):
-    DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///home_needs_dev.db'
-
-
-class ProductionConfig(Config):
-    DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').replace(
-        'postgres://', 'postgresql://', 1
-    ) or 'sqlite:///home_needs.db'
-
-    # Security headers
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
-    REMEMBER_COOKIE_SECURE = True
-    REMEMBER_COOKIE_HTTPONLY = True
-
-
-class TestingConfig(Config):
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///home_needs_test.db'
-
-
-config_map = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'testing': TestingConfig
-}
+def send_verification_email(user_email, code):
+    try:
+        msg = Message(
+            subject='Home Needs - Email Verification Code',
+            recipients=[user_email],
+            html=f'''
+            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;
+                        padding: 30px; background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+                        border-radius: 15px;">
+                <h1 style="color: white; text-align: center;">Home Needs</h1>
+                <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+                    <h2 style="color: #333;">Verification Code</h2>
+                    <p style="color: #666; font-size: 16px;">Your verification code is:</p>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;
+                                margin: 20px 0; font-size: 36px; font-weight: bold;
+                                letter-spacing: 8px; color: #ee5a24;">
+                        {code}
+                    </div>
+                    <p style="color: #999; font-size: 14px;">This code expires in 10 minutes.</p>
+                </div>
+            </div>
+            '''
+        )
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Email sending failed: {e}")
+        print(f"Verification code for {user_email}: {code}")
+        return False
