@@ -3,11 +3,12 @@ import random
 import string
 import traceback
 import os
+import threading
 from flask_mail import Mail, Message
 
 mail = Mail()
 
-# Store last code in memory for debugging (remove in final production)
+# Store codes for fallback
 last_codes = {}
 
 
@@ -15,26 +16,34 @@ def generate_verification_code():
     return ''.join(random.choices(string.digits, k=6))
 
 
-def send_verification_email(user_email, code):
-    """Send verification email. Returns True if sent, False if failed."""
+def _send_email_thread(app, msg, user_email, code):
+    """Send email in background thread"""
+    with app.app_context():
+        try:
+            mail.send(msg)
+            print(f"[EMAIL] ✓ Email sent to {user_email}")
+        except Exception as e:
+            print(f"[EMAIL] ✗ Background send failed: {e}")
+            print(f"[EMAIL] *** CODE for {user_email}: {code} ***")
 
-    # Always store code for fallback
+
+def send_verification_email(user_email, code):
+    """Send verification email without blocking the request"""
+    from flask import current_app
+
     last_codes[user_email] = code
 
     username = os.environ.get('MAIL_USERNAME')
     password = os.environ.get('MAIL_PASSWORD')
 
-    print(f"[EMAIL] ─────────────────────────────────────")
-    print(f"[EMAIL] Sending verification code to: {user_email}")
+    print(f"[EMAIL] Preparing email for: {user_email}")
     print(f"[EMAIL] Code: {code}")
     print(f"[EMAIL] Sender: {username}")
-    print(
-        f"[EMAIL] Password set: {'YES (' + str(len(password)) + ' chars)' if password else 'NO'}")
+    print(f"[EMAIL] Password set: {'YES' if password else 'NO'}")
 
     if not username or not password:
-        print(f"[EMAIL] ✗ SKIPPED — MAIL_USERNAME or MAIL_PASSWORD not set")
+        print(f"[EMAIL] ✗ Credentials missing — skipping email")
         print(f"[EMAIL] *** USE CODE: {code} ***")
-        print(f"[EMAIL] ─────────────────────────────────────")
         return False
 
     try:
@@ -60,31 +69,21 @@ def send_verification_email(user_email, code):
             </div>
         </div>
         '''
-        # Also set plain text version
         msg.body = f'Your Home Needs verification code is: {code}'
 
-        mail.send(msg)
-        print(f"[EMAIL] ✓ SUCCESS — Email sent to {user_email}")
-        print(f"[EMAIL] ─────────────────────────────────────")
+        # Send in background thread so signup doesn't hang
+        app = current_app._get_current_object()
+        thread = threading.Thread(
+            target=_send_email_thread,
+            args=(app, msg, user_email, code)
+        )
+        thread.daemon = True
+        thread.start()
+
+        print(f"[EMAIL] ✓ Email queued in background thread")
         return True
 
     except Exception as e:
-        error_msg = str(e)
-        print(f"[EMAIL] ✗ FAILED — {type(e).__name__}")
-        print(f"[EMAIL] Message: {error_msg}")
+        print(f"[EMAIL] ✗ Failed to prepare email: {e}")
         print(f"[EMAIL] *** FALLBACK CODE: {code} ***")
-
-        if 'auth' in error_msg.lower() or 'Authentication' in error_msg:
-            print(f"[EMAIL] FIX: Use Gmail App Password, not regular password")
-            print(f"[EMAIL] GET: https://myaccount.google.com/apppasswords")
-        elif 'connect' in error_msg.lower() or 'Connection' in error_msg:
-            print(
-                f"[EMAIL] FIX: SMTP connection blocked. Try MAIL_PORT=465 with MAIL_USE_SSL=True")
-        elif 'timeout' in error_msg.lower():
-            print(
-                f"[EMAIL] FIX: SMTP timed out. Render may block port 587. Try port 465")
-
-        print(f"[EMAIL] Full error:")
-        print(traceback.format_exc())
-        print(f"[EMAIL] ─────────────────────────────────────")
         return False

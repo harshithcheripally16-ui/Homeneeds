@@ -183,7 +183,17 @@ def create_app(config_name=None):
                     user.verification_code = code
                     user.code_expiry = datetime.utcnow() + timedelta(minutes=10)
                     db.session.commit()
-                    send_verification_email(user.email, code)
+
+                    email_sent = send_verification_email(user.email, code)
+                    if not email_sent:
+                        # Auto-verify if email not working
+                        user.is_verified = True
+                        db.session.commit()
+                        login_user(user, remember=True)
+                        if request.is_json:
+                            return jsonify({'success': True, 'redirect': url_for('dashboard')})
+                        return redirect(url_for('dashboard'))
+
                     if request.is_json:
                         return jsonify({'success': True, 'redirect': url_for('verify')})
                     return redirect(url_for('verify'))
@@ -239,7 +249,22 @@ def create_app(config_name=None):
             user.code_expiry = datetime.utcnow() + timedelta(minutes=10)
             db.session.add(user)
             db.session.commit()
-            send_verification_email(email, code)
+
+            # Send email in background (non-blocking)
+            email_sent = send_verification_email(email, code)
+
+            if not email_sent:
+                # Email credentials missing — auto-verify user
+                print(f"[SIGNUP] Email not configured — auto-verifying {name}")
+                user.is_verified = True
+                db.session.commit()
+                login_user(user, remember=True)
+                add_default_items(user.id)
+                if request.is_json:
+                    return jsonify({'success': True, 'redirect': url_for('dashboard')})
+                return redirect(url_for('dashboard'))
+
+            # Email queued — send to verification page
             session['verify_user_id'] = user.id
             if request.is_json:
                 return jsonify({'success': True, 'redirect': url_for('verify')})
@@ -285,15 +310,41 @@ def create_app(config_name=None):
         user_id = session.get('verify_user_id')
         if not user_id:
             return jsonify({'success': False, 'message': 'Session expired'}), 400
+
         user = User.query.get(user_id)
         if not user:
             return jsonify({'success': False, 'message': 'User not found'}), 400
+
         code = generate_verification_code()
         user.verification_code = code
         user.code_expiry = datetime.utcnow() + timedelta(minutes=10)
         db.session.commit()
-        send_verification_email(user.email, code)
-        return jsonify({'success': True, 'message': 'New code sent!'})
+
+        email_sent = send_verification_email(user.email, code)
+
+        if email_sent:
+            return jsonify({
+                'success': True,
+                'message': 'New code sent! Check your email.'
+            })
+        else:
+            # Email failed — auto-verify user so they're not stuck
+            print(f"[RESEND] Email failed for {user.email} — auto-verifying")
+            user.is_verified = True
+            db.session.commit()
+            login_user(user, remember=True)
+
+            # Check if default items need adding
+            if not Item.query.filter_by(user_id=user.id).first():
+                add_default_items(user.id)
+
+            session.pop('verify_user_id', None)
+
+            return jsonify({
+                'success': True,
+                'redirect': url_for('dashboard'),
+                'message': 'Account verified! Redirecting...'
+            })
 
     @app.route('/logout')
     @login_required

@@ -163,13 +163,25 @@
         const data = await response.json();
 
         if (data.success) {
-          successEl.textContent = 'New code sent!';
+          // Check if server auto-verified and wants redirect
+          if (data.redirect) {
+            successEl.textContent = data.message || 'Account verified!';
+            successEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            setTimeout(function () {
+              window.location.href = data.redirect;
+            }, 1000);
+            return;
+          }
+
+          successEl.textContent = data.message || 'New code sent!';
           successEl.style.display = 'block';
           errorEl.style.display = 'none';
 
+          // Countdown before allowing resend again
           let countdown = 30;
-          const timer = setInterval(() => {
-            btn.textContent = `Resend in ${countdown}s`;
+          const timer = setInterval(function () {
+            btn.textContent = 'Resend in ' + countdown + 's';
             countdown--;
             if (countdown < 0) {
               clearInterval(timer);
@@ -177,9 +189,14 @@
               btn.textContent = 'Resend Code';
             }
           }, 1000);
+        } else {
+          errorEl.textContent = data.message || 'Failed to resend';
+          errorEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Resend Code';
         }
       } catch (err) {
-        errorEl.textContent = 'Failed to resend code';
+        errorEl.textContent = 'Connection error. Try again.';
         errorEl.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Resend Code';
