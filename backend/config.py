@@ -9,30 +9,40 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DATABASE_URL') or 'sqlite:///home_needs.db'
 
-    # Email — these MUST be set for verification to work
+    # Email Configuration
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = True
-    MAIL_USE_SSL = False
+
+    # Port 587 = TLS, Port 465 = SSL
+    if MAIL_PORT == 465:
+        MAIL_USE_TLS = False
+        MAIL_USE_SSL = True
+    else:
+        MAIL_USE_TLS = True
+        MAIL_USE_SSL = False
+
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
     MAIL_MAX_EMAILS = None
     MAIL_ASCII_ATTACHMENTS = False
+    MAIL_TIMEOUT = 10  # 10 second timeout
 
-    # Debug mail config on startup
     @staticmethod
     def log_mail_config():
         username = os.environ.get('MAIL_USERNAME')
         password = os.environ.get('MAIL_PASSWORD')
-        print(f"[MAIL CONFIG] Server: smtp.gmail.com:587")
+        port = os.environ.get('MAIL_PORT', '587')
+        print(f"[MAIL CONFIG] ═══════════════════════════════")
+        print(f"[MAIL CONFIG] Server:   smtp.gmail.com:{port}")
         print(f"[MAIL CONFIG] Username: {username}")
-        print(f"[MAIL CONFIG] Password set: {'YES' if password else 'NO'}")
-        if password:
-            print(f"[MAIL CONFIG] Password length: {len(password)}")
+        print(
+            f"[MAIL CONFIG] Password: {'SET (' + str(len(password)) + ' chars)' if password else 'NOT SET'}")
+        print(f"[MAIL CONFIG] TLS:      {port == '587'}")
+        print(f"[MAIL CONFIG] SSL:      {port == '465'}")
         if not username or not password:
-            print(
-                f"[MAIL CONFIG] ⚠ WARNING: Email will NOT work without both MAIL_USERNAME and MAIL_PASSWORD")
+            print(f"[MAIL CONFIG] ⚠ WARNING: Email WILL NOT work")
+        print(f"[MAIL CONFIG] ═══════════════════════════════")
 
 
 class DevelopmentConfig(Config):

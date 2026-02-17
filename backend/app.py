@@ -110,16 +110,15 @@ def create_app(config_name=None):
             'config': config_name
         })
 
-    # ============ MAIL TEST (remove after testing) ============
-
+     # ============ MAIL TEST (remove after verification works) ============
     @app.route('/test-mail')
     def test_mail():
-        """Temporary route to test email — REMOVE after confirming it works"""
         test_email = os.environ.get('MAIL_USERNAME')
         if not test_email:
             return jsonify({
                 'success': False,
-                'message': 'MAIL_USERNAME not set in environment variables'
+                'message': 'MAIL_USERNAME not set',
+                'fix': 'Add MAIL_USERNAME in Render → Environment'
             })
 
         code = generate_verification_code()
@@ -127,12 +126,24 @@ def create_app(config_name=None):
 
         return jsonify({
             'success': result,
-            'message': 'Email sent! Check your inbox.' if result else 'Email failed. Check Render logs.',
-            'mail_username_set': bool(os.environ.get('MAIL_USERNAME')),
+            'message': 'Check your inbox!' if result else 'Failed — check Render logs',
+            'mail_username': os.environ.get('MAIL_USERNAME', 'NOT SET'),
             'mail_password_set': bool(os.environ.get('MAIL_PASSWORD')),
-            'mail_server': os.environ.get('MAIL_SERVER', 'smtp.gmail.com'),
+            'mail_password_length': len(os.environ.get('MAIL_PASSWORD', '')),
             'mail_port': os.environ.get('MAIL_PORT', '587'),
-            'test_code': code if not result else 'check email'
+            'code_if_failed': code if not result else 'sent to email'
+        })
+
+    @app.route('/debug-code/<email>')
+    def debug_code(email):
+        """Temporary: shows the verification code for testing.
+        REMOVE THIS ROUTE before going to production."""
+        from auth import last_codes
+        code = last_codes.get(email, 'No code found for this email')
+        return jsonify({
+            'email': email,
+            'code': code,
+            'note': 'REMOVE this route before production launch'
         })
 
     # ============ PWA FILES ============
