@@ -12,7 +12,7 @@ import os
 def get_project_paths():
     """
     Find template and static folders automatically.
-    Works for local dev, Render.com, and any deployment.
+    Returns: (template_folder, static_folder, static_url_path)
     """
     backend_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(backend_dir)
@@ -21,28 +21,26 @@ def get_project_paths():
     new_templates = os.path.join(project_root, 'frontend', 'pages')
     new_static = os.path.join(project_root, 'frontend')
     if os.path.isdir(new_templates) and os.path.isdir(new_static):
-        print(f"[PATHS] Using frontend structure: {new_templates}")
+        print(f"[PATHS] Using frontend structure")
+        print(f"  Templates: {new_templates}")
+        print(f"  Static:    {new_static}")
         return new_templates, new_static
 
     # Priority 2: Templates inside backend/ folder
     local_templates = os.path.join(backend_dir, 'templates')
     local_static = os.path.join(backend_dir, 'static')
     if os.path.isdir(local_templates):
-        print(f"[PATHS] Using local structure: {local_templates}")
+        print(f"[PATHS] Using local structure")
         return local_templates, local_static
 
     # Priority 3: Old structure at project root
     old_templates = os.path.join(project_root, 'templates')
     old_static = os.path.join(project_root, 'static')
     if os.path.isdir(old_templates):
-        print(f"[PATHS] Using old structure: {old_templates}")
+        print(f"[PATHS] Using old structure")
         return old_templates, old_static
 
-    # Fallback
-    print(f"[PATHS] WARNING: No template folder found! Tried:")
-    print(f"  - {new_templates}")
-    print(f"  - {local_templates}")
-    print(f"  - {old_templates}")
+    print(f"[PATHS] WARNING: No template folder found!")
     return new_templates, new_static
 
 
@@ -54,7 +52,8 @@ def create_app(config_name=None):
 
     app = Flask(__name__,
                 template_folder=template_folder,
-                static_folder=static_folder
+                static_folder=static_folder,
+                static_url_path='/static'
                 )
 
     app.config.from_object(config_map.get(
@@ -85,11 +84,27 @@ def create_app(config_name=None):
     # ============ HEALTH CHECK ============
     @app.route('/health')
     def health_check():
+        # List files in static folder to debug
+        static_contents = []
+        try:
+            for item in os.listdir(app.static_folder):
+                item_path = os.path.join(app.static_folder, item)
+                if os.path.isdir(item_path):
+                    sub_items = os.listdir(item_path)
+                    static_contents.append(f"{item}/: {sub_items}")
+                else:
+                    static_contents.append(item)
+        except Exception as e:
+            static_contents.append(f"Error: {e}")
+
         return jsonify({
             'status': 'healthy',
             'timestamp': datetime.utcnow().isoformat(),
             'template_folder': app.template_folder,
-            'static_folder': app.static_folder
+            'static_folder': app.static_folder,
+            'static_url_path': app.static_url_path,
+            'static_contents': static_contents,
+            'config': config_name
         })
 
     # ============ PWA FILES ============
@@ -417,7 +432,7 @@ def create_app(config_name=None):
             ).count(),
         }
 
-    # ============ ASSET LINKS (Play Store TWA) ============
+    # ============ ASSET LINKS ============
 
     @app.route('/.well-known/assetlinks.json')
     def asset_links():
@@ -449,7 +464,6 @@ def create_app(config_name=None):
     return app
 
 
-# Entry point — gunicorn uses this
 app = create_app()
 
 if __name__ == '__main__':

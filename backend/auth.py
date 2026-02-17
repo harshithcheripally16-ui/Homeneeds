@@ -1,8 +1,8 @@
 # backend/auth.py
 import random
 import string
-from datetime import datetime, timedelta
 from flask_mail import Mail, Message
+import traceback
 
 mail = Mail()
 
@@ -35,8 +35,11 @@ def send_verification_email(user_email, code):
             '''
         )
         mail.send(msg)
+        print(f"[EMAIL] ✓ Verification email sent to {user_email}")
         return True
     except Exception as e:
-        print(f"Email sending failed: {e}")
-        print(f"Verification code for {user_email}: {code}")
+        print(f"[EMAIL] ✗ Failed to send email to {user_email}")
+        print(f"[EMAIL] Error: {e}")
+        print(f"[EMAIL] Traceback: {traceback.format_exc()}")
+        print(f"[EMAIL] *** VERIFICATION CODE for {user_email}: {code} ***")
         return False
