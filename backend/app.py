@@ -420,6 +420,26 @@ def create_app(config_name=None):
             return jsonify({'success': False, 'message': 'Server error'}), 500
         return redirect(url_for('dashboard'))
 
+    # ============ SECURITY HEADERS ============
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['Referrer-Policy'] = 'no-referrer-when-downgrade'
+
+        # Content Security Policy
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "script-src 'self'; "
+            "img-src 'self' data:; "
+            "connect-src 'self';"
+        )
+
+        return response
+
     return app
 
 
