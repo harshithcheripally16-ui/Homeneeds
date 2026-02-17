@@ -1,0 +1,205 @@
+<!-- templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Home Needs - Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Add to <head> of ALL HTML templates -->
+  <meta name="theme-color" content="#E23744">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Home Needs">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+</head>
+
+<body data-theme="light">
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="user-avatar">
+          <span>{{ user.name[0]|upper }}</span>
+        </div>
+        <div class="header-greeting">
+          <span class="greeting-small">Welcome back,</span>
+          <span class="greeting-name">{{ user.name }}</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+          <i class="fas fa-moon"></i>
+        </button>
+        <a href="/logout" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="dashboard-main">
+      <div class="dashboard-hero animate-fade-in">
+        <h1 class="dashboard-title">Home Needs</h1>
+        <p class="dashboard-subtitle">Manage your home essentials effortlessly</p>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-container animate-slide-up">
+        <div class="stat-card stat-procure">
+          <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+          <div class="stat-info">
+            <span class="stat-number" id="statVegProcure">{{ veg_procure_count }}</span>
+            <span class="stat-label">Veg & Fruits to Buy</span>
+          </div>
+        </div>
+        <div class="stat-card stat-grocery">
+          <div class="stat-icon"><i class="fas fa-shopping-basket"></i></div>
+          <div class="stat-info">
+            <span class="stat-number" id="statGroceryProcure">{{ grocery_procure_count }}</span>
+            <span class="stat-label">Groceries to Buy</span>
+          </div>
+        </div>
+        <div class="stat-card stat-total-veg">
+          <div class="stat-icon"><i class="fas fa-carrot"></i></div>
+          <div class="stat-info">
+            <span class="stat-number" id="statTotalVeg">{{ total_veg }}</span>
+            <span class="stat-label">Total Veg & Fruits</span>
+          </div>
+        </div>
+        <div class="stat-card stat-total-grocery">
+          <div class="stat-icon"><i class="fas fa-box"></i></div>
+          <div class="stat-info">
+            <span class="stat-number" id="statTotalGrocery">{{ total_grocery }}</span>
+            <span class="stat-label">Total Groceries</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Cards -->
+      <div class="nav-cards-container">
+        <h2 class="section-title animate-fade-in">Quick Access</h2>
+
+        <div class="nav-cards-grid">
+          <a href="/vegfruits-procure" class="nav-card card-vegfruit-procure animate-card"
+            style="animation-delay: 0.1s">
+            <div class="nav-card-icon">
+              <i class="fas fa-leaf"></i>
+            </div>
+            <div class="nav-card-content">
+              <h3>Vegetables & Fruits</h3>
+              <p>To Be Procured</p>
+            </div>
+            <div class="nav-card-arrow">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="nav-card-bg-icon">
+              <i class="fas fa-leaf"></i>
+            </div>
+          </a>
+
+          <a href="/groceries-procure" class="nav-card card-grocery-procure animate-card" style="animation-delay: 0.2s">
+            <div class="nav-card-icon">
+              <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div class="nav-card-content">
+              <h3>Groceries</h3>
+              <p>To Be Procured</p>
+            </div>
+            <div class="nav-card-arrow">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="nav-card-bg-icon">
+              <i class="fas fa-shopping-bag"></i>
+            </div>
+          </a>
+
+          <a href="/vegfruits-list" class="nav-card card-vegfruit-list animate-card" style="animation-delay: 0.3s">
+            <div class="nav-card-icon">
+              <i class="fas fa-apple-alt"></i>
+            </div>
+            <div class="nav-card-content">
+              <h3>All Vegetables & Fruits</h3>
+              <p>Complete List</p>
+            </div>
+            <div class="nav-card-arrow">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="nav-card-bg-icon">
+              <i class="fas fa-apple-alt"></i>
+            </div>
+          </a>
+
+          <a href="/groceries-list" class="nav-card card-grocery-list animate-card" style="animation-delay: 0.4s">
+            <div class="nav-card-icon">
+              <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <div class="nav-card-content">
+              <h3>All Groceries</h3>
+              <p>Complete List</p>
+            </div>
+            <div class="nav-card-arrow">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="nav-card-bg-icon">
+              <i class="fas fa-boxes-stacked"></i>
+            </div>
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/dashboard" class="bottom-nav-item active">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="/vegfruits-procure" class="bottom-nav-item">
+        <i class="fas fa-leaf"></i>
+        <span>Veggies</span>
+      </a>
+      <a href="/groceries-procure" class="bottom-nav-item">
+        <i class="fas fa-shopping-bag"></i>
+        <span>Groceries</span>
+      </a>
+      <a href="/vegfruits-list" class="bottom-nav-item">
+        <i class="fas fa-list"></i>
+        <span>Lists</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    // Refresh stats on page load
+    refreshDashboardStats();
+  </script>
+  <!-- Add to ALL HTML templates before </body> -->
+  <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then(function (registration) {
+            console.log('SW registered:', registration.scope);
+
+            // Check for updates every 30 minutes
+            setInterval(function () {
+              registration.update();
+            }, 30 * 60 * 1000);
+          })
+          .catch(function (error) {
+            console.log('SW registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>

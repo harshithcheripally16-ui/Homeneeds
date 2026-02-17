@@ -1,0 +1,51 @@
+# .gitignore
+# Location: Home Needs/.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# Database
+*.db
+*.sqlite3
+instance/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PyInstaller
+*.spec
+launcher.py
+app_bundled.py
+
+# Logs
+*.log
+
+# Home Needs specific
+home_needs.db
+home_needs_dev.db
+home_needs_test.db
+backup_old_structure/
+
+# Environment variables
+.env
+.flaskenv

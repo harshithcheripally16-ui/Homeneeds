@@ -1,0 +1,217 @@
+<!-- templates/signup.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Home Needs - Sign Up</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Add to <head> of ALL HTML templates -->
+  <meta name="theme-color" content="#E23744">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Home Needs">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+</head>
+
+<body class="auth-body" data-theme="light">
+  <div class="auth-container">
+    <div class="auth-card signup-card animate-slide-up">
+      <div class="auth-header">
+        <div class="auth-logo">
+          <i class="fas fa-home"></i>
+        </div>
+        <h1>Home Needs</h1>
+        <p class="auth-subtitle">Create Your Account</p>
+      </div>
+
+      <div class="auth-form-container">
+        <h2>Get Started</h2>
+        <p class="auth-description">Join us for a smarter home</p>
+
+        <div id="signupError" class="auth-error" style="display:none;"></div>
+
+        <form id="signupForm" class="auth-form">
+          <div class="input-group">
+            <div class="input-icon"><i class="fas fa-user"></i></div>
+            <input type="text" id="signupName" name="name" placeholder="Full Name" required>
+            <div class="input-line"></div>
+          </div>
+
+          <div class="input-group">
+            <div class="input-icon"><i class="fas fa-envelope"></i></div>
+            <input type="email" id="signupEmail" name="email" placeholder="Email Address" required>
+            <div class="input-line"></div>
+          </div>
+
+          <div class="input-group">
+            <div class="input-icon"><i class="fas fa-calendar"></i></div>
+            <input type="date" id="signupDob" name="dob" placeholder="Date of Birth">
+            <div class="input-line"></div>
+          </div>
+
+          <div class="input-group">
+            <div class="input-icon"><i class="fas fa-lock"></i></div>
+            <input type="password" id="signupPassword" name="password" placeholder="New Password" required
+              minlength="6">
+            <button type="button" class="password-toggle" onclick="togglePassword('signupPassword', this)">
+              <i class="fas fa-eye"></i>
+            </button>
+            <div class="input-line"></div>
+          </div>
+
+          <div class="password-strength" id="passwordStrength">
+            <div class="strength-bar">
+              <div class="strength-fill" id="strengthFill"></div>
+            </div>
+            <span class="strength-text" id="strengthText"></span>
+          </div>
+
+          <div class="input-group">
+            <div class="input-icon"><i class="fas fa-lock"></i></div>
+            <input type="password" id="signupConfirmPassword" name="confirm_password" placeholder="Confirm Password"
+              required>
+            <button type="button" class="password-toggle" onclick="togglePassword('signupConfirmPassword', this)">
+              <i class="fas fa-eye"></i>
+            </button>
+            <div class="input-line"></div>
+          </div>
+
+          <button type="submit" class="auth-btn">
+            <span>Create Account</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Already have an account? <a href="/login" class="auth-link">Sign In</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-decoration">
+      <div class="floating-shape shape-1"></div>
+      <div class="floating-shape shape-2"></div>
+      <div class="floating-shape shape-3"></div>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const icon = btn.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+
+    document.getElementById('signupPassword').addEventListener('input', function () {
+      const password = this.value;
+      const fill = document.getElementById('strengthFill');
+      const text = document.getElementById('strengthText');
+      const container = document.getElementById('passwordStrength');
+
+      container.style.display = password.length > 0 ? 'flex' : 'none';
+
+      let strength = 0;
+      if (password.length >= 6) strength++;
+      if (password.length >= 10) strength++;
+      if (/[A-Z]/.test(password)) strength++;
+      if (/[0-9]/.test(password)) strength++;
+      if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+      const percentage = (strength / 5) * 100;
+      fill.style.width = percentage + '%';
+
+      if (strength <= 1) { fill.style.background = '#ff4757'; text.textContent = 'Weak'; }
+      else if (strength <= 2) { fill.style.background = '#ffa502'; text.textContent = 'Fair'; }
+      else if (strength <= 3) { fill.style.background = '#2ed573'; text.textContent = 'Good'; }
+      else { fill.style.background = '#00d2d3'; text.textContent = 'Strong'; }
+    });
+
+    document.getElementById('signupForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const errorEl = document.getElementById('signupError');
+      errorEl.style.display = 'none';
+
+      const password = document.getElementById('signupPassword').value;
+      const confirmPassword = document.getElementById('signupConfirmPassword').value;
+
+      if (password !== confirmPassword) {
+        errorEl.textContent = 'Passwords do not match';
+        errorEl.style.display = 'block';
+        errorEl.classList.add('shake');
+        setTimeout(() => errorEl.classList.remove('shake'), 500);
+        return;
+      }
+
+      const btn = this.querySelector('.auth-btn');
+      btn.classList.add('loading');
+      btn.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const response = await fetch('/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('signupName').value,
+            email: document.getElementById('signupEmail').value,
+            dob: document.getElementById('signupDob').value,
+            password: password,
+            confirm_password: confirmPassword
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          document.querySelector('.auth-card').classList.add('animate-slide-out');
+          setTimeout(() => { window.location.href = data.redirect; }, 400);
+        } else {
+          errorEl.textContent = data.message;
+          errorEl.style.display = 'block';
+          errorEl.classList.add('shake');
+          setTimeout(() => errorEl.classList.remove('shake'), 500);
+          btn.classList.remove('loading');
+          btn.innerHTML = '<span>Create Account</span><i class="fas fa-arrow-right"></i>';
+        }
+      } catch (err) {
+        errorEl.textContent = 'Connection error. Please try again.';
+        errorEl.style.display = 'block';
+        btn.classList.remove('loading');
+        btn.innerHTML = '<span>Create Account</span><i class="fas fa-arrow-right"></i>';
+      }
+    });
+  </script>
+  <!-- Add to ALL HTML templates before </body> -->
+  <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then(function (registration) {
+            console.log('SW registered:', registration.scope);
+
+            // Check for updates every 30 minutes
+            setInterval(function () {
+              registration.update();
+            }, 30 * 60 * 1000);
+          })
+          .catch(function (error) {
+            console.log('SW registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>

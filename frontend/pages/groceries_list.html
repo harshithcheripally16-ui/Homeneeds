@@ -1,0 +1,119 @@
+<!-- templates/groceries_list.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Home Needs - All Groceries</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Add to <head> of ALL HTML templates -->
+  <meta name="theme-color" content="#E23744">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Home Needs">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+</head>
+
+<body data-theme="light">
+  <div class="app-container">
+    <header class="page-header header-list-grocery">
+      <div class="header-left">
+        <a href="/dashboard" class="back-btn">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title-group">
+          <h1 class="page-title">Groceries</h1>
+          <span class="page-badge badge-list-grocery">Complete List</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="add-item-bar animate-slide-down">
+      <div class="add-item-input-wrapper">
+        <i class="fas fa-plus-circle add-icon"></i>
+        <input type="text" id="addItemInput" class="add-item-input" placeholder="Add new grocery item...">
+        <button class="add-item-btn" onclick="addNewItem('grocery')">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search items..." oninput="filterItems()">
+    </div>
+
+    <main class="page-content">
+      <div class="items-list" id="itemsList"></div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-icon"><i class="fas fa-boxes-stacked"></i></div>
+        <h3>No items yet</h3>
+        <p>Add your first grocery item</p>
+      </div>
+    </main>
+
+    <div class="undo-toast" id="undoToast" style="display:none;">
+      <span id="undoMessage">Item deleted</span>
+      <button class="undo-btn" id="undoBtn">UNDO</button>
+    </div>
+
+    <div class="page-nav-bar">
+      <a href="/vegfruits-list" class="page-nav-link">
+        <i class="fas fa-arrow-left"></i> Veg & Fruits
+      </a>
+      <a href="/dashboard" class="page-nav-link next">
+        Dashboard <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <nav class="bottom-nav">
+      <a href="/dashboard" class="bottom-nav-item">
+        <i class="fas fa-home"></i><span>Home</span>
+      </a>
+      <a href="/vegfruits-procure" class="bottom-nav-item">
+        <i class="fas fa-leaf"></i><span>Veggies</span>
+      </a>
+      <a href="/groceries-procure" class="bottom-nav-item">
+        <i class="fas fa-shopping-bag"></i><span>Groceries</span>
+      </a>
+      <a href="/groceries-list" class="bottom-nav-item active">
+        <i class="fas fa-list"></i><span>Lists</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>loadFullList('grocery');</script>
+  <!-- Add to ALL HTML templates before </body> -->
+  <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then(function (registration) {
+            console.log('SW registered:', registration.scope);
+
+            // Check for updates every 30 minutes
+            setInterval(function () {
+              registration.update();
+            }, 30 * 60 * 1000);
+          })
+          .catch(function (error) {
+            console.log('SW registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>

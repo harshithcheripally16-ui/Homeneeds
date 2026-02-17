@@ -1,0 +1,123 @@
+<!-- templates/vegfruits_procure.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Home Needs - Vegetables & Fruits to Procure</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Add to <head> of ALL HTML templates -->
+  <meta name="theme-color" content="#E23744">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Home Needs">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+</head>
+
+<body data-theme="light">
+  <div class="app-container">
+    <!-- Header -->
+    <header class="page-header header-vegfruit">
+      <div class="header-left">
+        <a href="/dashboard" class="back-btn">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="page-title-group">
+          <h1 class="page-title">Veg & Fruits</h1>
+          <span class="page-badge">To Procure</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Add Item Inline -->
+    <div class="add-item-bar animate-slide-down">
+      <div class="add-item-input-wrapper">
+        <i class="fas fa-plus-circle add-icon"></i>
+        <input type="text" id="addItemInput" class="add-item-input" placeholder="Add new vegetable or fruit...">
+        <button class="add-item-btn" onclick="addNewItem('vegfruit')">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Items List -->
+    <main class="page-content">
+      <div class="items-list" id="itemsList">
+        <!-- Items will be loaded here -->
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-icon">
+          <i class="fas fa-leaf"></i>
+        </div>
+        <h3>No items to procure</h3>
+        <p>Add items from the complete list or use the input above</p>
+        <a href="/vegfruits-list" class="empty-action-btn">
+          <i class="fas fa-list"></i> Go to Complete List
+        </a>
+      </div>
+    </main>
+
+    <!-- Page Navigation -->
+    <div class="page-nav-bar">
+      <a href="/dashboard" class="page-nav-link">
+        <i class="fas fa-home"></i> Dashboard
+      </a>
+      <a href="/groceries-procure" class="page-nav-link next">
+        Groceries <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/dashboard" class="bottom-nav-item">
+        <i class="fas fa-home"></i><span>Home</span>
+      </a>
+      <a href="/vegfruits-procure" class="bottom-nav-item active">
+        <i class="fas fa-leaf"></i><span>Veggies</span>
+      </a>
+      <a href="/groceries-procure" class="bottom-nav-item">
+        <i class="fas fa-shopping-bag"></i><span>Groceries</span>
+      </a>
+      <a href="/vegfruits-list" class="bottom-nav-item">
+        <i class="fas fa-list"></i><span>Lists</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    loadProcureItems('vegfruit');
+  </script>
+  <!-- Add to ALL HTML templates before </body> -->
+  <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then(function (registration) {
+            console.log('SW registered:', registration.scope);
+
+            // Check for updates every 30 minutes
+            setInterval(function () {
+              registration.update();
+            }, 30 * 60 * 1000);
+          })
+          .catch(function (error) {
+            console.log('SW registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>
