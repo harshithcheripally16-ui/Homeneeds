@@ -2,7 +2,7 @@
     "name": "Home Needs",
     "short_name": "HomeNeeds",
     "description": "Smart home grocery and vegetable management",
-    "start_url": "/dashboard",
+    "start_url": "/",
     "display": "standalone",
     "orientation": "portrait",
     "background_color": "#F4F5FA",
