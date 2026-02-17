@@ -15,3 +15,5 @@ build/
 dist/
 *.log
 backup_old_structure/
+*.keystore
+*.jks
