@@ -10,37 +10,24 @@ import os
 
 
 def get_project_paths():
-    """
-    Find template and static folders automatically.
-    Returns: (template_folder, static_folder, static_url_path)
-    """
     backend_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(backend_dir)
 
-    # Priority 1: New structure — frontend/pages/ at project root
     new_templates = os.path.join(project_root, 'frontend', 'pages')
     new_static = os.path.join(project_root, 'frontend')
     if os.path.isdir(new_templates) and os.path.isdir(new_static):
-        print(f"[PATHS] Using frontend structure")
-        print(f"  Templates: {new_templates}")
-        print(f"  Static:    {new_static}")
         return new_templates, new_static
 
-    # Priority 2: Templates inside backend/ folder
     local_templates = os.path.join(backend_dir, 'templates')
     local_static = os.path.join(backend_dir, 'static')
     if os.path.isdir(local_templates):
-        print(f"[PATHS] Using local structure")
         return local_templates, local_static
 
-    # Priority 3: Old structure at project root
     old_templates = os.path.join(project_root, 'templates')
     old_static = os.path.join(project_root, 'static')
     if os.path.isdir(old_templates):
-        print(f"[PATHS] Using old structure")
         return old_templates, old_static
 
-    print(f"[PATHS] WARNING: No template folder found!")
     return new_templates, new_static
 
 
@@ -59,7 +46,6 @@ def create_app(config_name=None):
     app.config.from_object(config_map.get(
         config_name, config_map['development']))
 
-    # Initialize extensions
     db.init_app(app)
     mail.init_app(app)
     CORS(app, supports_credentials=True)
@@ -81,74 +67,26 @@ def create_app(config_name=None):
     with app.app_context():
         db.create_all()
 
-    from config import Config
-    Config.log_mail_config()
-
     # ============ HEALTH CHECK ============
     @app.route('/health')
     def health_check():
-        # List files in static folder to debug
-        static_contents = []
-        try:
-            for item in os.listdir(app.static_folder):
-                item_path = os.path.join(app.static_folder, item)
-                if os.path.isdir(item_path):
-                    sub_items = os.listdir(item_path)
-                    static_contents.append(f"{item}/: {sub_items}")
-                else:
-                    static_contents.append(item)
-        except Exception as e:
-            static_contents.append(f"Error: {e}")
-
         return jsonify({
             'status': 'healthy',
             'timestamp': datetime.utcnow().isoformat(),
             'template_folder': app.template_folder,
-            'static_folder': app.static_folder,
-            'static_url_path': app.static_url_path,
-            'static_contents': static_contents,
-            'config': config_name
+            'static_folder': app.static_folder
         })
 
-     # ============ MAIL TEST (remove after verification works) ============
+    # ============ TEST MAIL ============
     @app.route('/test-mail')
     def test_mail():
-        """Test email sending — shows exactly what works and what doesn't"""
-        test_email = os.environ.get('MAIL_USERNAME')
-        if not test_email:
-            return jsonify({
-                'success': False,
-                'message': 'MAIL_USERNAME not set in Render Environment',
-                'fix': 'Go to Render → Environment → Add MAIL_USERNAME'
-            })
-
-        code = generate_verification_code()
-        result = send_verification_email(test_email, code)
-
         return jsonify({
-            'success': result,
-            'message': 'Email sent! Check your Gmail inbox.' if result else 'Email FAILED. Check Render logs for details.',
-            'sent_to': test_email,
-            'mail_username': test_email,
-            'mail_password_set': bool(os.environ.get('MAIL_PASSWORD')),
-            'mail_password_length': len(os.environ.get('MAIL_PASSWORD', '')),
-            'code': code if not result else 'check your inbox'
-        })
-
-    @app.route('/debug-code/<email>')
-    def debug_code(email):
-        """Temporary: shows the verification code for testing.
-        REMOVE THIS ROUTE before going to production."""
-        from auth import last_codes
-        code = last_codes.get(email, 'No code found for this email')
-        return jsonify({
-            'email': email,
-            'code': code,
-            'note': 'REMOVE this route before production launch'
+            'status': 'SMTP blocked on Render free tier',
+            'solution': 'Users are auto-verified on signup',
+            'email_required': False
         })
 
     # ============ PWA FILES ============
-
     @app.route('/manifest.json')
     def manifest():
         return app.send_static_file('manifest.json')
@@ -178,27 +116,11 @@ def create_app(config_name=None):
             password = data.get('password', '')
             user = User.query.filter_by(name=name).first()
             if user and user.check_password(password):
+                # Auto-verify if not verified
                 if not user.is_verified:
-                    session['verify_user_id'] = user.id
-                    code = generate_verification_code()
-                    user.verification_code = code
-                    user.code_expiry = datetime.utcnow() + timedelta(minutes=10)
+                    user.is_verified = True
                     db.session.commit()
 
-                    email_sent = send_verification_email(user.email, code)
-
-                    if not email_sent:
-                        # Auto-verify if email not working
-                        user.is_verified = True
-                        db.session.commit()
-                        login_user(user, remember=True)
-                        if request.is_json:
-                            return jsonify({'success': True, 'redirect': url_for('dashboard')})
-                        return redirect(url_for('dashboard'))
-
-                    if request.is_json:
-                        return jsonify({'success': True, 'redirect': url_for('verify')})
-                    return redirect(url_for('verify'))
                 login_user(user, remember=True)
                 if request.is_json:
                     return jsonify({'success': True, 'redirect': url_for('dashboard')})
@@ -246,107 +168,49 @@ def create_app(config_name=None):
                 except ValueError:
                     pass
             user.set_password(password)
-            code = generate_verification_code()
-            user.verification_code = code
-            user.code_expiry = datetime.utcnow() + timedelta(minutes=10)
+
+            # Auto-verify — no email on Render free tier
+            user.is_verified = True
+
             db.session.add(user)
             db.session.commit()
 
-            # Try sending email (has 15 second timeout per attempt)
-            email_sent = send_verification_email(email, code)
+            print(f"[SIGNUP] User created and auto-verified: {name}")
 
-            if email_sent:
-                # Email sent — go to verification page
-                session['verify_user_id'] = user.id
-                if request.is_json:
-                    return jsonify({'success': True, 'redirect': url_for('verify')})
-                return redirect(url_for('verify'))
-            else:
-                # Email failed — auto-verify so user isn't stuck
-                print(f"[SIGNUP] Email failed — auto-verifying {name}")
-                user.is_verified = True
-                db.session.commit()
-                login_user(user, remember=True)
-                add_default_items(user.id)
-                if request.is_json:
-                    return jsonify({'success': True, 'redirect': url_for('dashboard')})
-                return redirect(url_for('dashboard'))
+            login_user(user, remember=True)
+            add_default_items(user.id)
 
+            if request.is_json:
+                return jsonify({'success': True, 'redirect': url_for('dashboard')})
+            return redirect(url_for('dashboard'))
         return render_template('signup.html')
 
     @app.route('/verify', methods=['GET', 'POST'])
     def verify():
-        user_id = session.get('verify_user_id')
-        if not user_id:
-            return redirect(url_for('login'))
-        user = User.query.get(user_id)
-        if not user:
-            return redirect(url_for('login'))
-        if request.method == 'POST':
-            data = request.get_json() if request.is_json else request.form
-            code = data.get('code', '').strip()
-            if user.code_expiry and datetime.utcnow() > user.code_expiry:
-                msg = 'Verification code expired. Please request a new one.'
-                if request.is_json:
-                    return jsonify({'success': False, 'message': msg}), 400
-                flash(msg, 'error')
-                return render_template('verify.html', email=user.email)
-            if code == user.verification_code:
-                user.is_verified = True
-                user.verification_code = None
-                user.code_expiry = None
-                db.session.commit()
-                login_user(user, remember=True)
-                session.pop('verify_user_id', None)
-                add_default_items(user.id)
-                if request.is_json:
-                    return jsonify({'success': True, 'redirect': url_for('dashboard')})
-                return redirect(url_for('dashboard'))
-            msg = 'Invalid verification code'
-            if request.is_json:
-                return jsonify({'success': False, 'message': msg}), 400
-            flash(msg, 'error')
-        return render_template('verify.html', email=user.email)
+        # If someone lands here, just redirect to dashboard or login
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('login'))
 
     @app.route('/resend-code', methods=['POST'])
     def resend_code():
+        # Auto-verify and redirect
         user_id = session.get('verify_user_id')
-        if not user_id:
-            return jsonify({'success': False, 'message': 'Session expired'}), 400
-
-        user = User.query.get(user_id)
-        if not user:
-            return jsonify({'success': False, 'message': 'User not found'}), 400
-
-        code = generate_verification_code()
-        user.verification_code = code
-        user.code_expiry = datetime.utcnow() + timedelta(minutes=10)
-        db.session.commit()
-
-        email_sent = send_verification_email(user.email, code)
-
-        if email_sent:
-            return jsonify({
-                'success': True,
-                'message': 'New code sent! Check your email.'
-            })
-        else:
-            # Auto-verify since email doesn't work
-            print(f"[RESEND] Email failed — auto-verifying {user.email}")
-            user.is_verified = True
-            db.session.commit()
-            login_user(user, remember=True)
-
-            if not Item.query.filter_by(user_id=user.id).first():
-                add_default_items(user.id)
-
-            session.pop('verify_user_id', None)
-
-            return jsonify({
-                'success': True,
-                'redirect': url_for('dashboard'),
-                'message': 'Account verified! Redirecting...'
-            })
+        if user_id:
+            user = User.query.get(user_id)
+            if user:
+                user.is_verified = True
+                db.session.commit()
+                login_user(user, remember=True)
+                if not Item.query.filter_by(user_id=user.id).first():
+                    add_default_items(user.id)
+                session.pop('verify_user_id', None)
+                return jsonify({
+                    'success': True,
+                    'redirect': url_for('dashboard'),
+                    'message': 'Account verified!'
+                })
+        return jsonify({'success': False, 'message': 'Session expired'}), 400
 
     @app.route('/logout')
     @login_required
