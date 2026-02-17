@@ -1,8 +1,9 @@
 # backend/auth.py
 import random
 import string
-from flask_mail import Mail, Message
 import traceback
+import os
+from flask_mail import Mail, Message
 
 mail = Mail()
 
@@ -12,9 +13,24 @@ def generate_verification_code():
 
 
 def send_verification_email(user_email, code):
+    # Log mail configuration status
+    username = os.environ.get('MAIL_USERNAME')
+    password = os.environ.get('MAIL_PASSWORD')
+
+    print(f"[EMAIL] Attempting to send code to: {user_email}")
+    print(f"[EMAIL] Using sender: {username}")
+    print(f"[EMAIL] Password configured: {'YES' if password else 'NO'}")
+
+    if not username or not password:
+        print(f"[EMAIL] ✗ MAIL_USERNAME or MAIL_PASSWORD not set!")
+        print(f"[EMAIL] *** VERIFICATION CODE for {user_email}: {code} ***")
+        print(f"[EMAIL] Set these in Render → Environment Variables")
+        return False
+
     try:
         msg = Message(
             subject='Home Needs - Email Verification Code',
+            sender=username,
             recipients=[user_email],
             html=f'''
             <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;
@@ -35,11 +51,28 @@ def send_verification_email(user_email, code):
             '''
         )
         mail.send(msg)
-        print(f"[EMAIL] ✓ Verification email sent to {user_email}")
+        print(f"[EMAIL] ✓ Email sent successfully to {user_email}")
         return True
     except Exception as e:
-        print(f"[EMAIL] ✗ Failed to send email to {user_email}")
-        print(f"[EMAIL] Error: {e}")
-        print(f"[EMAIL] Traceback: {traceback.format_exc()}")
+        error_msg = str(e)
+        print(f"[EMAIL] ✗ Failed to send email")
+        print(f"[EMAIL] Error type: {type(e).__name__}")
+        print(f"[EMAIL] Error message: {error_msg}")
+        print(f"[EMAIL] Full traceback:")
+        print(traceback.format_exc())
         print(f"[EMAIL] *** VERIFICATION CODE for {user_email}: {code} ***")
+
+        # Common error explanations
+        if 'Authentication' in error_msg or 'auth' in error_msg.lower():
+            print(
+                f"[EMAIL] HINT: Wrong password. Use Gmail App Password, not regular password")
+            print(
+                f"[EMAIL] HINT: Get one at https://myaccount.google.com/apppasswords")
+        elif 'Connection' in error_msg or 'connect' in error_msg.lower():
+            print(
+                f"[EMAIL] HINT: Cannot connect to smtp.gmail.com. Check MAIL_SERVER and MAIL_PORT")
+        elif 'SSL' in error_msg or 'TLS' in error_msg:
+            print(
+                f"[EMAIL] HINT: SSL/TLS issue. Check MAIL_USE_TLS=True and MAIL_PORT=587")
+
         return False

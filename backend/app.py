@@ -81,6 +81,9 @@ def create_app(config_name=None):
     with app.app_context():
         db.create_all()
 
+    from config import Config
+    Config.log_mail_config()
+
     # ============ HEALTH CHECK ============
     @app.route('/health')
     def health_check():
@@ -107,7 +110,33 @@ def create_app(config_name=None):
             'config': config_name
         })
 
+    # ============ MAIL TEST (remove after testing) ============
+
+    @app.route('/test-mail')
+    def test_mail():
+        """Temporary route to test email — REMOVE after confirming it works"""
+        test_email = os.environ.get('MAIL_USERNAME')
+        if not test_email:
+            return jsonify({
+                'success': False,
+                'message': 'MAIL_USERNAME not set in environment variables'
+            })
+
+        code = generate_verification_code()
+        result = send_verification_email(test_email, code)
+
+        return jsonify({
+            'success': result,
+            'message': 'Email sent! Check your inbox.' if result else 'Email failed. Check Render logs.',
+            'mail_username_set': bool(os.environ.get('MAIL_USERNAME')),
+            'mail_password_set': bool(os.environ.get('MAIL_PASSWORD')),
+            'mail_server': os.environ.get('MAIL_SERVER', 'smtp.gmail.com'),
+            'mail_port': os.environ.get('MAIL_PORT', '587'),
+            'test_code': code if not result else 'check email'
+        })
+
     # ============ PWA FILES ============
+
     @app.route('/manifest.json')
     def manifest():
         return app.send_static_file('manifest.json')
