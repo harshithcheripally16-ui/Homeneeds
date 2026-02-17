@@ -113,12 +113,13 @@ def create_app(config_name=None):
      # ============ MAIL TEST (remove after verification works) ============
     @app.route('/test-mail')
     def test_mail():
+        """Test email sending — shows exactly what works and what doesn't"""
         test_email = os.environ.get('MAIL_USERNAME')
         if not test_email:
             return jsonify({
                 'success': False,
-                'message': 'MAIL_USERNAME not set',
-                'fix': 'Add MAIL_USERNAME in Render → Environment'
+                'message': 'MAIL_USERNAME not set in Render Environment',
+                'fix': 'Go to Render → Environment → Add MAIL_USERNAME'
             })
 
         code = generate_verification_code()
@@ -126,12 +127,12 @@ def create_app(config_name=None):
 
         return jsonify({
             'success': result,
-            'message': 'Check your inbox!' if result else 'Failed — check Render logs',
-            'mail_username': os.environ.get('MAIL_USERNAME', 'NOT SET'),
+            'message': 'Email sent! Check your Gmail inbox.' if result else 'Email FAILED. Check Render logs for details.',
+            'sent_to': test_email,
+            'mail_username': test_email,
             'mail_password_set': bool(os.environ.get('MAIL_PASSWORD')),
             'mail_password_length': len(os.environ.get('MAIL_PASSWORD', '')),
-            'mail_port': os.environ.get('MAIL_PORT', '587'),
-            'code_if_failed': code if not result else 'sent to email'
+            'code': code if not result else 'check your inbox'
         })
 
     @app.route('/debug-code/<email>')
@@ -185,6 +186,7 @@ def create_app(config_name=None):
                     db.session.commit()
 
                     email_sent = send_verification_email(user.email, code)
+
                     if not email_sent:
                         # Auto-verify if email not working
                         user.is_verified = True
@@ -250,12 +252,18 @@ def create_app(config_name=None):
             db.session.add(user)
             db.session.commit()
 
-            # Send email in background (non-blocking)
+            # Try sending email (has 15 second timeout per attempt)
             email_sent = send_verification_email(email, code)
 
-            if not email_sent:
-                # Email credentials missing — auto-verify user
-                print(f"[SIGNUP] Email not configured — auto-verifying {name}")
+            if email_sent:
+                # Email sent — go to verification page
+                session['verify_user_id'] = user.id
+                if request.is_json:
+                    return jsonify({'success': True, 'redirect': url_for('verify')})
+                return redirect(url_for('verify'))
+            else:
+                # Email failed — auto-verify so user isn't stuck
+                print(f"[SIGNUP] Email failed — auto-verifying {name}")
                 user.is_verified = True
                 db.session.commit()
                 login_user(user, remember=True)
@@ -264,11 +272,6 @@ def create_app(config_name=None):
                     return jsonify({'success': True, 'redirect': url_for('dashboard')})
                 return redirect(url_for('dashboard'))
 
-            # Email queued — send to verification page
-            session['verify_user_id'] = user.id
-            if request.is_json:
-                return jsonify({'success': True, 'redirect': url_for('verify')})
-            return redirect(url_for('verify'))
         return render_template('signup.html')
 
     @app.route('/verify', methods=['GET', 'POST'])
@@ -328,13 +331,12 @@ def create_app(config_name=None):
                 'message': 'New code sent! Check your email.'
             })
         else:
-            # Email failed — auto-verify user so they're not stuck
-            print(f"[RESEND] Email failed for {user.email} — auto-verifying")
+            # Auto-verify since email doesn't work
+            print(f"[RESEND] Email failed — auto-verifying {user.email}")
             user.is_verified = True
             db.session.commit()
             login_user(user, remember=True)
 
-            # Check if default items need adding
             if not Item.query.filter_by(user_id=user.id).first():
                 add_default_items(user.id)
 
