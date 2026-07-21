@@ -1,19 +1,36 @@
-# 🏠 Home Needs
+# 🏠 Home Needs - Smart Home Grocery Management App
 
-Smart home grocery and vegetable management application.
+**Live Website:** [https://homeneeds-stockly.web.app/](https://homeneeds-stockly.web.app/)
 
-**Website version of this app:** [https://harshithcheripally16-ui.github.io/Homeneeds/](https://harshithcheripally16-ui.github.io/Homeneeds/)
+*(Note: The GitHub Pages link `https://harshithcheripally16-ui.github.io/Homeneeds/` gave a 404 error because GitHub Pages is not automatically enabled when pushing to a new repository. To make it work, go to your GitHub repository **Settings > Pages**, and set the Source branch to `main`. It will take a few minutes to deploy. In the meantime, you can use the Firebase link above which is already active.)*
 
 ## Overview
 Built a grocery tracking web app using HTML, CSS, and JavaScript with Firebase for cloud data storage and real-time sync, making it accessible across multiple devices without a traditional backend. Used the LocalStorage API to keep grocery data available offline and added smart restocking alerts through JavaScript logic, reducing manual tracking effort by 40%.
 
+## Features
+- **Cloud Data Storage & Real-time Sync:** Powered by Firebase, ensuring your grocery list is always up to date across all your devices.
+- **Offline Availability:** Utilizes the LocalStorage API so you can view your grocery data even without an active internet connection.
+- **Smart Restocking Alerts:** Custom JavaScript logic automatically alerts you when items are running low, reducing the effort of manual tracking by 40%.
+- **Serverless Architecture:** Fully functional without a traditional backend, utilizing Firebase services.
+
+## Technology Stack
+- **Frontend:** HTML, CSS, JavaScript
+- **Backend/Database:** Firebase
+- **Storage:** LocalStorage API
+
 ## Quick Start (Local Development)
 
-```bash
-# First-time setup
-python setup.py
+To run the application locally:
 
-# Run the app
-cd backend
-python app.py
+```bash
+# Clone the repository
+git clone https://github.com/harshithcheripally16-ui/Homeneeds.git
+
+# Navigate into the directory
+cd Homeneeds
+
+# Serve the files using a local server (e.g., using Python or Live Server)
+# If using Python 3:
+python -m http.server 8000
 ```
+Then, open `http://localhost:8000` in your web browser.
