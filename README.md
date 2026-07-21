@@ -2,7 +2,10 @@
 
 **Live Website:** [https://homeneeds-stockly.web.app/](https://homeneeds-stockly.web.app/)
 
-*(Note: The GitHub Pages link `https://harshithcheripally16-ui.github.io/Homeneeds/` gave a 404 error because GitHub Pages is not automatically enabled when pushing to a new repository. To make it work, go to your GitHub repository **Settings > Pages**, and set the Source branch to `main`. It will take a few minutes to deploy. In the meantime, you can use the Firebase link above which is already active.)*
+> **Note on GitHub Pages:** If you prefer to host this site on GitHub Pages at `https://harshithcheripally16-ui.github.io/Homeneeds/`, GitHub requires enabling Pages in your repository settings:
+> 1. Go to your GitHub repository: [https://github.com/harshithcheripally16-ui/Homeneeds](https://github.com/harshithcheripally16-ui/Homeneeds)
+> 2. Click **Settings** > **Pages** (on the left menu).
+> 3. Under **Build and deployment**, set **Source** to `Deploy from a branch`, choose branch **`main`** (or **`gh-pages`**), and click **Save**.
 
 ## Overview
 Built a grocery tracking web app using HTML, CSS, and JavaScript with Firebase for cloud data storage and real-time sync, making it accessible across multiple devices without a traditional backend. Used the LocalStorage API to keep grocery data available offline and added smart restocking alerts through JavaScript logic, reducing manual tracking effort by 40%.
@@ -29,8 +32,7 @@ git clone https://github.com/harshithcheripally16-ui/Homeneeds.git
 # Navigate into the directory
 cd Homeneeds
 
-# Serve the files using a local server (e.g., using Python or Live Server)
-# If using Python 3:
+# Serve the files using a local server (e.g., using Python)
 python -m http.server 8000
 ```
 Then, open `http://localhost:8000` in your web browser.
