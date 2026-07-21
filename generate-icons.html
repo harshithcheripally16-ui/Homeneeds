@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>HomeNeeds Icon Generator</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      gap: 28px;
+    }
+
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #FC8019;
+      text-align: center;
+    }
+
+    p.sub {
+      color: #aaa;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: -18px;
+    }
+
+    .notice {
+      background: rgba(252, 128, 25, 0.10);
+      border: 1.5px solid rgba(252, 128, 25, 0.35);
+      border-radius: 14px;
+      padding: 16px 24px;
+      max-width: 560px;
+      width: 100%;
+      font-size: 0.88rem;
+      color: #fda44f;
+      font-weight: 600;
+      line-height: 1.75;
+      text-align: center;
+    }
+
+    .notice strong {
+      color: #FC8019;
+    }
+
+    .master-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .master-wrap h2 {
+      font-size: 0.95rem;
+      color: #FC8019;
+      font-weight: 700;
+    }
+
+    #master-display {
+      border-radius: 22%;
+      box-shadow: 0 10px 40px rgba(252, 128, 25, 0.45);
+      image-rendering: pixelated;
+    }
+
+    .sizes-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .size-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .size-item canvas {
+      border-radius: 20%;
+      box-shadow: 0 4px 16px rgba(252, 128, 25, 0.28);
+      image-rendering: auto;
+    }
+
+    .size-item span {
+      font-size: 0.70rem;
+      color: #aaa;
+      font-weight: 700;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 11px;
+      justify-content: center;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #FC8019, #e06a0a);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 11px 22px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 14px rgba(252, 128, 25, 0.35);
+      transition: transform 0.14s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-big {
+      background: linear-gradient(135deg, #60b246, #3d8c2a);
+      box-shadow: 0 4px 14px rgba(96, 178, 70, 0.35);
+      font-size: 1rem;
+      padding: 14px 38px;
+    }
+
+    .status {
+      padding: 12px 28px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      text-align: center;
+      display: none;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.ok {
+      background: rgba(96, 178, 70, 0.14);
+      color: #60b246;
+      border: 1.5px solid #60b246;
+    }
+
+    .box {
+      background: #16161f;
+      border: 1px solid #2a2a3a;
+      border-radius: 18px;
+      padding: 22px 26px;
+      max-width: 540px;
+      width: 100%;
+    }
+
+    .box h3 {
+      color: #FC8019;
+      margin-bottom: 12px;
+      font-size: 0.98rem;
+      font-weight: 800;
+    }
+
+    .box ol {
+      padding-left: 20px;
+      color: #bbb;
+      font-size: 0.86rem;
+      line-height: 2.1;
+    }
+
+    .box code {
+      background: #2a2a3a;
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: #FC8019;
+      font-size: 0.82rem;
+    }
+
+    .box .step-important {
+      background: rgba(252, 128, 25, 0.10);
+      border-left: 3px solid #FC8019;
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 10px;
+      color: #fda44f;
+      font-size: 0.84rem;
+      font-weight: 600;
+      line-height: 1.65;
+    }
+
+    #verify-section {
+      max-width: 540px;
+      width: 100%;
+      background: #16161f;
+      border: 1px solid #2a2a3a;
+      border-radius: 18px;
+      padding: 22px 26px;
+    }
+
+    #verify-section h3 {
+      color: #60b246;
+      margin-bottom: 14px;
+      font-size: 0.98rem;
+      font-weight: 800;
+    }
+
+    #verify-section input {
+      width: 100%;
+      background: #0d0d14;
+      border: 1.5px solid #333;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    #verify-section input:focus {
+      border-color: #FC8019;
+    }
+
+    #verify-result {
+      font-size: 0.86rem;
+      line-height: 1.8;
+      color: #bbb;
+    }
+
+    .verify-ok {
+      color: #60b246;
+      font-weight: 700;
+    }
+
+    .verify-err {
+      color: #f44336;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🏠 HomeNeeds Icon Generator</h1>
+  <p class="sub">Identical design pixel-perfect across all 8 sizes</p>
+
+  <div class="notice">
+    <strong>How this works:</strong><br />
+    The master icon is drawn once at 512×512.<br />
+    All other sizes are <strong>downscaled copies</strong> of the exact same artwork.<br />
+    After downloading, deploy to Firebase so PWABuilder fetches the same files.
+  </div>
+
+  <!-- Hidden 512px master -->
+  <canvas id="master-canvas" width="512" height="512" style="display:none"></canvas>
+
+  <!-- 256px preview -->
+  <div class="master-wrap">
+    <h2>Master Icon Preview (256px)</h2>
+    <canvas id="master-display" width="256" height="256"></canvas>
+  </div>
+
+  <!-- Size previews -->
+  <div class="sizes-row" id="sizes-row"></div>
+
+  <!-- Individual download buttons -->
+  <div class="btn-row" id="btn-row"></div>
+
+  <!-- Download all -->
+  <button class="btn btn-big" onclick="downloadAll()">⬇️ Download All 8 Icons</button>
+
+  <div class="status" id="status"></div>
+
+  <!-- Instructions -->
+  <div class="box">
+    <h3>📋 Exact steps to match PWABuilder</h3>
+    <ol>
+      <li>Click <strong>"Download All 8 Icons"</strong> above</li>
+      <li>Move all 8 PNG files to <code>HomeNeeds/icons/</code></li>
+      <li>Open VS Code terminal and run:<br />
+        <code>firebase deploy</code>
+      </li>
+      <li>Wait for deploy to finish (30–60 seconds)</li>
+      <li>Open PWABuilder and re-enter your URL</li>
+      <li>Icons will now match ✅</li>
+    </ol>
+    <div class="step-important">
+      ⚠️ The most common mistake is downloading icons but forgetting
+      to run <code>firebase deploy</code> before checking PWABuilder.
+      PWABuilder reads icons from your <strong>live server</strong>,
+      not your local folder.
+    </div>
+  </div>
+
+  <!-- Verify tool -->
+  <div id="verify-section">
+    <h3>🔍 Icon URL Verifier</h3>
+    <p style="color:#aaa;font-size:0.84rem;margin-bottom:12px;">
+      Paste your Firebase URL below to check if icons are live and accessible.
+    </p>
+    <input type="url" id="verify-url" placeholder="https://YOUR-PROJECT-ID.web.app" oninput="clearVerify()" />
+    <button class="btn" onclick="verifyIcons()" style="width:100%;margin-bottom:14px;">
+      🔎 Check Icons on Live Server
+    </button>
+    <div id="verify-result"></div>
+  </div>
+
+  <script>
+    /* ================================================================
+       SIZES
+    ================================================================ */
+    var SIZES = [72, 96, 128, 144, 152, 192, 384, 512];
+
+    /* ================================================================
+       DRAW MASTER ICON AT 512×512
+       All measurements are proportional to S=512
+    ================================================================ */
+    function drawMasterIcon(canvas) {
+      canvas.width = 512;
+      canvas.height = 512;
+      var ctx = canvas.getContext('2d');
+      var S = 512;
+
+      ctx.clearRect(0, 0, S, S);
+
+      /* ── 1. Orange rounded-square background ── */
+      var bgGrad = ctx.createLinearGradient(0, 0, S, S);
+      bgGrad.addColorStop(0.00, '#FF8F2A');
+      bgGrad.addColorStop(0.48, '#FC8019');
+      bgGrad.addColorStop(1.00, '#E06A0A');
+      ctx.fillStyle = bgGrad;
+
+      var R = Math.round(S * 0.18);
+      rrect(ctx, 0, 0, S, S, R);
+      ctx.fill();
+
+      /* ── 2. Soft top-left highlight ── */
+      var hi = ctx.createRadialGradient(S * 0.28, S * 0.20, 0, S * 0.28, S * 0.20, S * 0.62);
+      hi.addColorStop(0, 'rgba(255,255,255,0.17)');
+      hi.addColorStop(1, 'rgba(255,255,255,0.00)');
+      ctx.fillStyle = hi;
+      rrect(ctx, 0, 0, S, S, R);
+      ctx.fill();
+
+      /* ── 3. Villa home ── */
+      drawVilla(ctx, S);
+    }
+
+    /* Rounded rectangle path helper */
+    function rrect(ctx, x, y, w, h, r) {
+      if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
+      ctx.beginPath();
+      ctx.moveTo(x + r.tl, y);
+      ctx.lineTo(x + w - r.tr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+      ctx.lineTo(x + w, y + h - r.br);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+      ctx.lineTo(x + r.bl, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+      ctx.lineTo(x, y + r.tl);
+      ctx.quadraticCurveTo(x, y, x + r.tl, y);
+      ctx.closePath();
+    }
+
+    function drawVilla(ctx, S) {
+      ctx.save();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      /* Layout constants (all proportional to S) */
+      var pad = S * 0.115;
+      var w = S - pad * 2;
+      var cx = S * 0.500;
+
+      var roofTopY = S * 0.175;
+      var roofMidY = S * 0.390;
+      var wallBotY = S * 0.755;
+      var wL = pad + w * 0.065;   /* wall left x  */
+      var wR = S - pad - w * 0.065; /* wall right x */
+      var wallW = wR - wL;
+      var wallH = wallBotY - roofMidY;
+
+      /* A ── Triangular roof ── */
+      ctx.beginPath();
+      ctx.moveTo(cx, roofTopY);
+      ctx.lineTo(wR + w * 0.055, roofMidY + S * 0.018);
+      ctx.lineTo(wL - w * 0.055, roofMidY + S * 0.018);
+      ctx.closePath();
+      ctx.fill();
+
+      /* B ── Overhang bar ── */
+      var ovH = S * 0.040;
+      var ovY = roofMidY - ovH * 0.35;
+      ctx.beginPath();
+      rrect(ctx, wL - w * 0.075, ovY, wallW + w * 0.15, ovH, ovH / 2);
+      ctx.fill();
+
+      /* C ── Wall body ── */
+      ctx.beginPath();
+      rrect(ctx, wL, roofMidY, wallW, wallH,
+        { tl: 0, tr: 0, br: S * 0.038, bl: S * 0.038 });
+      ctx.fill();
+
+      /* D ── Front door ── */
+      var dW = wallW * 0.195;
+      var dH = wallH * 0.520;
+      var dX = cx - dW / 2;
+      var dY = wallBotY - dH;
+      ctx.fillStyle = 'rgba(220,100,5,0.92)';
+      ctx.beginPath();
+      rrect(ctx, dX, dY, dW, dH, { tl: dW * 0.28, tr: dW * 0.28, br: 0, bl: 0 });
+      ctx.fill();
+
+      /* Door knob */
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(dX + dW * 0.74, dY + dH * 0.60, S * 0.016, 0, Math.PI * 2);
+      ctx.fill();
+
+      /* E ── Windows ── */
+      var winW = wallW * 0.185;
+      var winH = wallH * 0.295;
+      var winY = roofMidY + wallH * 0.105;
+      var winLX = wL + wallW * 0.095;
+      var winRX = wR - wallW * 0.095 - winW;
+
+      function drawWin(wx) {
+        ctx.fillStyle = 'rgba(220,100,5,0.88)';
+        ctx.beginPath();
+        rrect(ctx, wx, winY, winW, winH, S * 0.021);
+        ctx.fill();
+        /* Panes */
+        ctx.fillStyle = 'rgba(255,255,255,0.54)';
+        ctx.fillRect(wx + winW * 0.43, winY + winH * 0.08, winW * 0.14, winH * 0.84);
+        ctx.fillRect(wx + winW * 0.08, winY + winH * 0.43, winW * 0.84, winH * 0.14);
+      }
+      drawWin(winLX);
+      drawWin(winRX);
+
+      /* F ── Chimney ── */
+      ctx.fillStyle = '#FFFFFF';
+      var chW = w * 0.073;
+      var chH = (roofMidY - roofTopY) * 0.490;
+      var chX = cx + w * 0.135;
+      var chY = roofTopY + S * 0.038;
+      ctx.beginPath();
+      rrect(ctx, chX, chY - chH, chW, chH, chW * 0.22);
+      ctx.fill();
+      /* Cap */
+      ctx.beginPath();
+      rrect(ctx, chX - chW * 0.26, chY - chH - chW * 0.19,
+        chW * 1.52, chW * 0.22, chW * 0.08);
+      ctx.fill();
+
+      /* G ── Ground path ── */
+      ctx.fillStyle = 'rgba(255,255,255,0.26)';
+      var pathW = wallW * 0.255;
+      var pathH = S * 0.036;
+      ctx.beginPath();
+      rrect(ctx, cx - pathW / 2, wallBotY + S * 0.008, pathW, pathH, pathH / 2);
+      ctx.fill();
+
+      /* H ── Trees ── */
+      tree(ctx, wL - w * 0.115, wallBotY, S, +1);
+      tree(ctx, wR + w * 0.115, wallBotY, S, -1);
+
+      ctx.restore();
+    }
+
+    function tree(ctx, cx, base, S, dir) {
+      var tW = S * 0.023;
+      var tH = S * 0.092;
+      var lR = S * 0.060;
+
+      /* Trunk */
+      ctx.fillStyle = 'rgba(255,255,255,0.44)';
+      ctx.beginPath();
+      rrect(ctx, cx - tW / 2, base - tH, tW, tH, tW / 2);
+      ctx.fill();
+
+      /* Main leaves */
+      ctx.fillStyle = 'rgba(255,255,255,0.70)';
+      ctx.beginPath();
+      ctx.arc(cx, base - tH - lR * 0.32, lR, 0, Math.PI * 2);
+      ctx.fill();
+
+      /* Secondary leaves */
+      ctx.fillStyle = 'rgba(255,255,255,0.48)';
+      ctx.beginPath();
+      ctx.arc(cx + dir * lR * 0.40, base - tH + lR * 0.08, lR * 0.70, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    /* ================================================================
+       SCALE FROM MASTER
+       drawImage from the 512px master canvas → any target size
+    ================================================================ */
+    function scaledCanvas(size) {
+      var master = document.getElementById('master-canvas');
+      var out = document.createElement('canvas');
+      out.width = size;
+      out.height = size;
+      var ctx = out.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(master, 0, 0, size, size);
+      return out;
+    }
+
+    /* ── Download one size ── */
+    function dl(size) {
+      var c = scaledCanvas(size);
+      var link = document.createElement('a');
+      link.download = 'icon-' + size + '.png';
+      link.href = c.toDataURL('image/png');
+      link.click();
+    }
+
+    /* ── Download all ── */
+    function downloadAll() {
+      var statusEl = document.getElementById('status');
+      statusEl.className = 'status';
+      var delay = 0;
+      SIZES.forEach(function (size, i) {
+        setTimeout(function () {
+          dl(size);
+          if (i === SIZES.length - 1) {
+            statusEl.className = 'status show ok';
+            statusEl.textContent =
+              '✅ All 8 icons downloaded. Now run: firebase deploy';
+          }
+        }, delay);
+        delay += 360;
+      });
+    }
+
+    /* ================================================================
+       BUILD UI
+    ================================================================ */
+    function buildUI() {
+      /* Polyfill roundRect if needed */
+      if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+          if (typeof r === 'number') r = [r, r, r, r];
+          this.beginPath();
+          this.moveTo(x + r[0], y);
+          this.lineTo(x + w - r[1], y);
+          this.quadraticCurveTo(x + w, y, x + w, y + r[1]);
+          this.lineTo(x + w, y + h - r[2]);
+          this.quadraticCurveTo(x + w, y + h, x + w - r[2], y + h);
+          this.lineTo(x + r[3], y + h);
+          this.quadraticCurveTo(x, y + h, x, y + h - r[3]);
+          this.lineTo(x, y + r[0]);
+          this.quadraticCurveTo(x, y, x + r[0], y);
+          this.closePath();
+          return this;
+        };
+      }
+
+      /* Draw master */
+      var master = document.getElementById('master-canvas');
+      drawMasterIcon(master);
+
+      /* 256px preview */
+      var display = document.getElementById('master-display');
+      var dCtx = display.getContext('2d');
+      dCtx.imageSmoothingEnabled = true;
+      dCtx.imageSmoothingQuality = 'high';
+      dCtx.drawImage(master, 0, 0, 256, 256);
+
+      /* Size preview row */
+      var previewSizes = { 72: 72, 96: 80, 128: 88, 144: 94, 152: 94, 192: 108, 384: 128, 512: 148 };
+      var sizesRow = document.getElementById('sizes-row');
+
+      SIZES.forEach(function (size) {
+        var d = previewSizes[size] || 96;
+        var cv = document.createElement('canvas');
+        cv.width = d; cv.height = d;
+        cv.style.borderRadius = '20%';
+        var c = cv.getContext('2d');
+        c.imageSmoothingEnabled = true;
+        c.imageSmoothingQuality = 'high';
+        c.drawImage(master, 0, 0, d, d);
+
+        var item = document.createElement('div');
+        item.className = 'size-item';
+        var lbl = document.createElement('span');
+        lbl.textContent = size + 'px';
+        item.appendChild(cv);
+        item.appendChild(lbl);
+        sizesRow.appendChild(item);
+      });
+
+      /* Per-size download buttons */
+      var btnRow = document.getElementById('btn-row');
+      SIZES.forEach(function (size) {
+        var btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.textContent = '⬇️ ' + size + 'px';
+        btn.onclick = function () { dl(size); };
+        btnRow.appendChild(btn);
+      });
+    }
+
+    /* ================================================================
+       VERIFIER — checks if icons are live on the server
+    ================================================================ */
+    function clearVerify() {
+      document.getElementById('verify-result').innerHTML = '';
+    }
+
+    function verifyIcons() {
+      var base = document.getElementById('verify-url').value.trim().replace(/\/$/, '');
+      var result = document.getElementById('verify-result');
+
+      if (!base) {
+        result.innerHTML = '<span class="verify-err">⚠️ Please enter your Firebase URL first.</span>';
+        return;
+      }
+
+      result.innerHTML = '<span style="color:#aaa">🔄 Checking ' + SIZES.length + ' icon URLs...</span>';
+
+      var paths = SIZES.map(function (s) {
+        return { size: s, url: base + '/icons/icon-' + s + '.png' };
+      });
+
+      var done = 0;
+      var rows = '';
+
+      paths.forEach(function (p) {
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        img.onload = function () {
+          done++;
+          rows += '<div class="verify-ok">✅ ' + p.size + 'px — accessible (' +
+            img.naturalWidth + '×' + img.naturalHeight + 'px)</div>';
+          if (done === paths.length) finish();
+        };
+
+        img.onerror = function () {
+          done++;
+          rows += '<div class="verify-err">❌ ' + p.size + 'px — NOT found at:<br/>' +
+            '<code style="font-size:0.78rem;color:#f44336">' + p.url + '</code></div>';
+          if (done === paths.length) finish();
+        };
+
+        img.src = p.url + '?v=' + Date.now(); /* bypass cache */
+      });
+
+      function finish() {
+        result.innerHTML = rows;
+      }
+    }
+
+    window.onload = buildUI;
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,148 @@
+/* =====================================================
+   AUTH — Immersive full-screen experience
+===================================================== */
+#page-auth { overflow: hidden; background: transparent; }
+
+.auth-bg {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(ellipse at 15% 5%,  rgba(252,128,25,0.55) 0%, transparent 50%),
+    radial-gradient(ellipse at 88% 18%, rgba(253,164,79,0.40) 0%, transparent 48%),
+    radial-gradient(ellipse at 50% 80%, rgba(96,178,70,0.22)  0%, transparent 55%),
+    radial-gradient(ellipse at 5%  70%, rgba(61,124,201,0.18) 0%, transparent 45%),
+    linear-gradient(165deg, #ff6600 0%, #fc8019 28%, #ffa040 56%, #fff4eb 100%);
+}
+body.dark-theme .auth-bg {
+  background:
+    radial-gradient(ellipse at 15% 5%,  rgba(252,128,25,0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 88% 18%, rgba(200,80,10,0.22)  0%, transparent 48%),
+    radial-gradient(ellipse at 50% 80%, rgba(60,140,40,0.14)  0%, transparent 55%),
+    linear-gradient(165deg, #1a0800 0%, #2d1000 35%, #161622 100%);
+}
+
+/* Large decorative ring */
+.auth-bg::before {
+  content: '';
+  position: absolute; top: -130px; right: -130px;
+  width: 380px; height: 380px; border-radius: 50%;
+  border: 60px solid rgba(255,255,255,0.07);
+  pointer-events: none;
+  animation: rotateSlow 22s linear infinite;
+}
+.auth-bg::after {
+  content: '';
+  position: absolute; bottom: 38%; left: -70px;
+  width: 220px; height: 220px; border-radius: 50%;
+  border: 40px solid rgba(255,255,255,0.05);
+  pointer-events: none;
+  animation: rotateSlow 16s linear infinite reverse;
+}
+@keyframes rotateSlow {
+  to { transform: rotate(360deg); }
+}
+
+/* Floating food emoji */
+.food-float {
+  position: absolute;
+  font-size: 1.5rem;
+  opacity: 0.20;
+  animation: floatFood var(--dur, 8s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15));
+}
+@keyframes floatFood {
+  0%,100% { transform: translateY(0)    rotate(0deg)  scale(1);    }
+  33%      { transform: translateY(-20px) rotate(8deg)  scale(1.05); }
+  66%      { transform: translateY(-10px) rotate(-6deg) scale(0.96); }
+}
+
+/* Card sheet */
+.auth-container {
+  width: 100%; max-width: 500px;
+  background: var(--surface-1);
+  border-radius: var(--r-3xl) var(--r-3xl) 0 0;
+  padding: var(--s6) var(--s5);
+  padding-bottom: max(var(--s6), env(safe-area-inset-bottom));
+  max-height: 88vh; overflow-y: auto;
+  position: relative; z-index: 2;
+  box-shadow: var(--elev-4);
+  animation: slideUpAuth var(--dur-slow) var(--spring);
+}
+@keyframes slideUpAuth {
+  from { transform: translateY(70px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Pull handle */
+.auth-container::before {
+  content: '';
+  display: block;
+  width: 40px; height: 4px;
+  background: var(--line-strong);
+  border-radius: var(--r-full);
+  margin: 0 auto var(--s5);
+}
+
+/* Logo */
+.auth-logo { text-align: center; margin-bottom: var(--s5); }
+
+.logo-icon {
+  font-size: 3rem; display: block; margin-bottom: var(--s2);
+  animation: floatIcon 4s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(252,128,25,0.4));
+}
+@keyframes floatIcon {
+  0%,100% { transform: translateY(0) rotate(-4deg); }
+  50%      { transform: translateY(-10px) rotate(4deg); }
+}
+
+.logo-text {
+  font-size: var(--t-3xl); font-weight: 900;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; display: block; margin-bottom: 4px;
+  letter-spacing: -0.03em;
+}
+.logo-tagline { font-size: var(--t-sm); color: var(--ink-2); font-weight: 500; }
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: var(--r-full);
+  padding: 4px; margin-bottom: var(--s5); gap: 4px;
+  border: 1px solid var(--line);
+}
+.auth-tab {
+  flex: 1; padding: 10px; border: none; background: transparent;
+  border-radius: var(--r-full); font-size: var(--t-sm);
+  font-weight: 700; cursor: pointer; color: var(--ink-2);
+  font-family: var(--font); transition: var(--t);
+}
+.auth-tab.active {
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  color: #fff;
+  box-shadow: var(--elev-brand);
+}
+
+/* Form */
+.auth-form-wrap {
+  animation: fadeSlideUp var(--dur-base) var(--ease-out);
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.auth-alt-text {
+  text-align: center; font-size: var(--t-sm);
+  color: var(--ink-2); margin-top: var(--s4); font-weight: 500;
+}
+.auth-link {
+  color: var(--brand); font-weight: 800; cursor: pointer;
+  text-decoration: none; border-bottom: 1.5px solid var(--brand-light);
+}

@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#FF5722" />
+  <meta name="description" content="HomeNeeds - Your Daily Meal Manager" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>HomeNeeds</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/meals.css" />
+  <link rel="stylesheet" href="css/shopping.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body class="light-theme" data-text-size="medium">
+  <!-- Animated background canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <!-- ==================== PAGE 1: AUTH ==================== -->
+  <div id="page-auth" class="page active">
+    <div class="auth-bg">
+      <div class="auth-container">
+        <div class="auth-logo">
+          <div class="logo-icon">🍛</div>
+          <h1 class="logo-text">HomeNeeds</h1>
+          <p class="logo-tagline">Your Daily Meal Companion</p>
+        </div>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="signin">Sign In</button>
+          <button class="auth-tab" data-tab="signup">Sign Up</button>
+        </div>
+
+        <!-- Sign In -->
+        <div class="auth-form-wrap" id="signin-form">
+          <form class="auth-form" id="form-signin" novalidate>
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <div class="input-wrap">
+                <span class="input-icon">👤</span>
+                <input type="text" class="form-input" id="signin-username" placeholder="Enter your username"
+                  autocomplete="username" />
+              </div>
+              <span class="form-error" id="err-signin-username"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input type="password" class="form-input" id="signin-password" placeholder="Enter your password"
+                  autocomplete="current-password" />
+                <button type="button" class="toggle-pass" data-target="signin-password">👁️</button>
+              </div>
+              <span class="form-error" id="err-signin-password"></span>
+            </div>
+            <button type="submit" class="btn-primary btn-full"><span>Sign In</span></button>
+            <p class="auth-alt-text">Don't have an account? <span class="auth-link" data-tab="signup">Sign Up</span></p>
+          </form>
+        </div>
+
+        <!-- Sign Up -->
+        <div class="auth-form-wrap hidden" id="signup-form">
+          <form class="auth-form" id="form-signup" novalidate>
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <div class="input-wrap">
+                <span class="input-icon">✏️</span>
+                <input type="text" class="form-input" id="signup-name" placeholder="Enter your full name"
+                  autocomplete="name" />
+              </div>
+              <span class="form-error" id="err-signup-name"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <div class="input-wrap">
+                <span class="input-icon">👤</span>
+                <input type="text" class="form-input" id="signup-username" placeholder="Choose a username"
+                  autocomplete="username" />
+              </div>
+              <span class="form-error" id="err-signup-username"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Birth</label>
+              <div class="input-wrap">
+                <span class="input-icon">📅</span>
+                <input type="date" class="form-input" id="signup-dob" autocomplete="bday" />
+              </div>
+              <span class="form-error" id="err-signup-dob"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input type="password" class="form-input" id="signup-password" placeholder="Create a password"
+                  autocomplete="new-password" />
+                <button type="button" class="toggle-pass" data-target="signup-password">👁️</button>
+              </div>
+              <span class="form-error" id="err-signup-password"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input type="password" class="form-input" id="signup-confirm" placeholder="Confirm your password"
+                  autocomplete="new-password" />
+                <button type="button" class="toggle-pass" data-target="signup-confirm">👁️</button>
+              </div>
+              <span class="form-error" id="err-signup-confirm"></span>
+            </div>
+            <button type="submit" class="btn-primary btn-full"><span>Create Account</span></button>
+            <p class="auth-alt-text">Already have an account? <span class="auth-link" data-tab="signin">Sign In</span>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 2: DASHBOARD ==================== -->
+  <div id="page-dashboard" class="page hidden">
+
+    <!-- Header -->
+    <div class="app-header">
+      <div class="header-left">
+        <div class="user-avatar" id="dash-avatar">👤</div>
+        <div class="header-info">
+          <p class="header-greeting" id="dash-greeting">Good Morning!</p>
+          <h2 class="header-username" id="dash-username">User</h2>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="dash-settings-btn" title="Settings">⚙️</button>
+      </div>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="dashboard-content">
+
+      <div class="dash-hero">
+        <div class="dash-hero-text">
+          <h3>Plan Your Week 🗓️</h3>
+          <p>Tap any day to manage breakfast, lunch &amp; dinner</p>
+        </div>
+        <span class="dash-hero-emoji">🍛</span>
+      </div>
+
+      <div class="week-header">
+        <h3 class="section-title">This Week's Meals</h3>
+        <p class="section-subtitle">Tap a day to manage your meals</p>
+      </div>
+      <div class="week-grid" id="week-grid"></div>
+
+      <div class="quick-stats">
+        <h3 class="section-title">Quick Stats</h3>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🍽️</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-total-meals">0</span>
+              <span class="stat-label">Meals Planned</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🛒</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-shopping">0</span>
+              <span class="stat-label">To Buy</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-complete">0</span>
+              <span class="stat-label">Days Planned</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Nav — NO settings tab -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item" data-page="meals">
+        <span class="nav-icon">🍛</span>
+        <span class="nav-label">Meals</span>
+      </button>
+      <button class="nav-item" data-page="shopping">
+        <span class="nav-icon">🛒</span>
+        <span class="nav-label">Shopping</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ==================== PAGE 3: MEALS ==================== -->
+  <div id="page-meals" class="page hidden">
+
+    <div class="app-header">
+      <div class="header-left">
+        <button class="back-btn" id="meals-back-btn">←</button>
+        <div class="header-info">
+          <p class="header-greeting">Meal Plan</p>
+          <h2 class="header-username" id="meals-day-title">Monday</h2>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="meals-settings-btn" title="Settings">⚙️</button>
+      </div>
+    </div>
+
+    <div class="meals-content" id="meals-content"></div>
+
+    <!-- Bottom Nav — NO settings tab -->
+    <nav class="bottom-nav">
+      <button class="nav-item" data-page="dashboard">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item active" data-page="meals">
+        <span class="nav-icon">🍛</span>
+        <span class="nav-label">Meals</span>
+      </button>
+      <button class="nav-item" data-page="shopping">
+        <span class="nav-icon">🛒</span>
+        <span class="nav-label">Shopping</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ==================== PAGE 4: SHOPPING ==================== -->
+  <div id="page-shopping" class="page hidden">
+
+    <div class="app-header">
+      <div class="header-left">
+        <button class="back-btn" id="shopping-back-btn">←</button>
+        <div class="header-info">
+          <p class="header-greeting">Grocery</p>
+          <h2 class="header-username">Shopping List</h2>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="shopping-settings-btn" title="Settings">⚙️</button>
+      </div>
+    </div>
+
+    <div class="shopping-content">
+      <div class="shopping-summary">
+        <div class="summary-card">
+          <span class="summary-icon">📋</span>
+          <div>
+            <p class="summary-value" id="shop-total">0</p>
+            <p class="summary-label">Total Items</p>
+          </div>
+        </div>
+        <div class="summary-card">
+          <span class="summary-icon">✅</span>
+          <div>
+            <p class="summary-value" id="shop-bought">0</p>
+            <p class="summary-label">Bought</p>
+          </div>
+        </div>
+        <div class="summary-card">
+          <span class="summary-icon">⏳</span>
+          <div>
+            <p class="summary-value" id="shop-remaining">0</p>
+            <p class="summary-label">Remaining</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="shopping-list-wrap">
+        <div class="shopping-filter">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="pending">Pending</button>
+          <button class="filter-btn" data-filter="bought">Bought</button>
+        </div>
+        <div id="shopping-list" class="shopping-list"></div>
+        <div class="empty-state hidden" id="shopping-empty">
+          <div class="empty-icon">🛒</div>
+          <p class="empty-title">No Items Yet</p>
+          <p class="empty-subtitle">Mark ingredients as unavailable from the Meals page to add them here.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Nav — NO settings tab -->
+    <nav class="bottom-nav">
+      <button class="nav-item" data-page="dashboard">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item" data-page="meals">
+        <span class="nav-icon">🍛</span>
+        <span class="nav-label">Meals</span>
+      </button>
+      <button class="nav-item active" data-page="shopping">
+        <span class="nav-icon">🛒</span>
+        <span class="nav-label">Shopping</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ==================== SETTINGS PANEL ==================== -->
+  <div id="settings-overlay" class="overlay hidden"></div>
+  <div id="settings-panel" class="settings-panel hidden">
+    <div class="settings-header">
+      <h2 class="settings-title">Settings</h2>
+      <button class="close-btn" id="settings-close">✕</button>
+    </div>
+    <div class="settings-content">
+
+      <!-- Profile -->
+      <div class="settings-section">
+        <div class="settings-profile-card">
+          <div class="settings-avatar-wrap">
+            <div class="settings-avatar" id="settings-avatar">👤</div>
+            <button class="avatar-edit-btn" id="avatar-edit-btn">📷</button>
+            <input type="file" id="avatar-upload" accept="image/*" class="hidden" />
+          </div>
+          <div class="settings-profile-info">
+            <h3 class="settings-name" id="settings-display-name">User Name</h3>
+            <p class="settings-uname" id="settings-display-username">@username</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Appearance -->
+      <div class="settings-section">
+        <h3 class="settings-section-title">🎨 Appearance</h3>
+
+        <!-- Theme row -->
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <span class="settings-row-label">Theme</span>
+            <span class="settings-row-desc">Switch between light and dark</span>
+          </div>
+          <div class="theme-toggle-wrap">
+            <button class="theme-option active" data-theme="light">☀️ Light</button>
+            <button class="theme-option" data-theme="dark">🌙 Dark</button>
+          </div>
+        </div>
+
+        <!-- Text Size row — slider with min/max clamp -->
+        <div class="settings-row font-size-row">
+          <div class="settings-row-info">
+            <span class="settings-row-label">Text Size</span>
+            <span class="settings-row-desc">
+              Drag or use − / + &nbsp;•&nbsp;
+              Range: <strong>12px – 22px</strong>
+            </span>
+          </div>
+
+          <div class="font-size-control">
+            <!-- Badge showing current size -->
+            <div class="font-size-badge-row">
+              <span class="font-size-badge-label">Current size</span>
+              <span class="font-size-badge" id="font-size-label">16px</span>
+            </div>
+
+            <!-- Slider + step buttons -->
+            <div class="font-slider-row">
+              <button class="font-step-btn" id="font-dec" title="Decrease font">−</button>
+              <input type="range" id="font-size-slider" class="font-slider" min="12" max="22" step="1" value="16"
+                aria-label="Font size" />
+              <button class="font-step-btn" id="font-inc" title="Increase font">+</button>
+            </div>
+
+            <!-- Min / Max endpoint labels -->
+            <div class="font-range-labels">
+              <span>A <small>(12px min)</small></span>
+              <span>A <small>(22px max)</small></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Account -->
+      <div class="settings-section">
+        <h3 class="settings-section-title">👤 Account</h3>
+        <div class="settings-actions-group">
+          <button class="settings-action-btn" id="btn-change-username">
+            <span class="action-icon">✏️</span>
+            <span>Change Username</span>
+            <span class="action-arrow">›</span>
+          </button>
+          <button class="settings-action-btn" id="btn-change-photo">
+            <span class="action-icon">📷</span>
+            <span>Update Profile Photo</span>
+            <span class="action-arrow">›</span>
+          </button>
+          <button class="settings-action-btn" id="btn-switch-account">
+            <span class="action-icon">🔄</span>
+            <span>Switch Account</span>
+            <span class="action-arrow">›</span>
+          </button>
+          <button class="settings-action-btn danger" id="btn-delete-account">
+            <span class="action-icon">🗑️</span>
+            <span>Delete Account</span>
+            <span class="action-arrow">›</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sign Out -->
+      <div class="settings-section">
+        <button class="btn-signout" id="btn-signout">Sign Out</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Add Dish Modal -->
+  <div id="modal-add-dish" class="modal hidden">
+    <div class="modal-overlay" id="modal-add-dish-overlay"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Dish</h3>
+        <button class="close-btn modal-close" data-modal="modal-add-dish">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Dish Name (Optional)</label>
+          <input type="text" class="form-input plain-input" id="new-dish-name" placeholder="e.g., Masala Dosa" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ingredients (Optional)</label>
+          <div class="ingredient-input-wrap">
+            <input type="text" class="form-input plain-input" id="new-ingredient-input"
+              placeholder="Type ingredient and press Add" />
+            <button type="button" class="btn-add-ingredient" id="btn-add-ingredient">Add</button>
+          </div>
+          <div class="ingredient-tags" id="ingredient-tags"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dish Image (Optional)</label>
+          <div class="image-upload-area" id="dish-image-area">
+            <input type="file" id="dish-image-upload" accept="image/*" class="hidden" />
+            <div class="upload-placeholder" id="upload-placeholder">
+              <span class="upload-icon">📷</span>
+              <span>Tap to upload image</span>
+            </div>
+            <img id="dish-image-preview" class="hidden" alt="Dish preview" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close" data-modal="modal-add-dish">Cancel</button>
+        <button class="btn-primary" id="btn-save-dish">Save Dish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Username Modal -->
+  <div id="modal-change-username" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Change Username</h3>
+        <button class="close-btn modal-close" data-modal="modal-change-username">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">New Username</label>
+          <input type="text" class="form-input plain-input" id="new-username-input" placeholder="Enter new username" />
+          <span class="form-error" id="err-new-username"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close" data-modal="modal-change-username">Cancel</button>
+        <button class="btn-primary" id="btn-save-username">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Account Modal -->
+  <div id="modal-delete-account" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title danger-title">Delete Account</h3>
+        <button class="close-btn modal-close" data-modal="modal-delete-account">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="warning-box">
+          <span class="warning-icon">⚠️</span>
+          <p>This action is permanent and cannot be undone. All your meal plans and data will be deleted.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Enter your password to confirm</label>
+          <input type="password" class="form-input plain-input" id="delete-confirm-pass" placeholder="Your password" />
+          <span class="form-error" id="err-delete-pass"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-close" data-modal="modal-delete-account">Cancel</button>
+        <button class="btn-danger" id="btn-confirm-delete">Delete Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden">
+    <span class="toast-icon" id="toast-icon">✅</span>
+    <span class="toast-message" id="toast-message">Done!</span>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-spinner" class="loading-spinner hidden">
+    <div class="spinner-ring"></div>
+  </div>
+
+  <!-- Scripts — ORDER MATTERS -->
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/meals.js"></script>
+  <script src="js/shopping.js"></script>
+
+  <script>
+    /* ── Animated background canvas (Swiggy-style floating bubbles) ── */
+    (function () {
+      const canvas = document.getElementById('bg-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      /* Bubble config */
+      const BUBBLE_COUNT = 18;
+      const bubbles = [];
+
+      function randBetween(a, b) { return a + Math.random() * (b - a); }
+
+      const lightColors = [
+        'rgba(252,128,25,VAL)',
+        'rgba(253,164,79,VAL)',
+        'rgba(96,178,70,VAL)',
+        'rgba(61,124,201,VAL)',
+        'rgba(255,200,100,VAL)',
+        'rgba(252,100,50,VAL)',
+      ];
+      const darkColors = [
+        'rgba(252,128,25,VAL)',
+        'rgba(200,80,10,VAL)',
+        'rgba(60,120,50,VAL)',
+        'rgba(40,80,160,VAL)',
+      ];
+
+      function makeColor(isDark) {
+        const palette = isDark ? darkColors : lightColors;
+        const c = palette[Math.floor(Math.random() * palette.length)];
+        const opacity = isDark
+          ? randBetween(0.04, 0.10).toFixed(3)
+          : randBetween(0.06, 0.16).toFixed(3);
+        return c.replace('VAL', opacity);
+      }
+
+      function spawnBubble(forceFresh) {
+        const isDark = document.body.classList.contains('dark-theme');
+        return {
+          x: randBetween(0, window.innerWidth),
+          y: forceFresh ? randBetween(0, window.innerHeight) : window.innerHeight + 60,
+          r: randBetween(20, 80),
+          vy: randBetween(-0.35, -0.80),
+          vx: randBetween(-0.20, 0.20),
+          opacity: 1,
+          color: makeColor(isDark),
+          wobble: randBetween(0, Math.PI * 2),
+          wobbleSpeed: randBetween(0.008, 0.022),
+        };
+      }
+
+      for (let i = 0; i < BUBBLE_COUNT; i++) bubbles.push(spawnBubble(true));
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const isDark = document.body.classList.contains('dark-theme');
+
+        bubbles.forEach((b, i) => {
+          /* Move */
+          b.y += b.vy;
+          b.wobble += b.wobbleSpeed;
+          b.x += Math.sin(b.wobble) * 0.6 + b.vx;
+
+          /* Recycle */
+          if (b.y + b.r < -10) {
+            bubbles[i] = spawnBubble(false);
+            return;
+          }
+
+          /* Draw */
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fillStyle = b.color;
+          ctx.fill();
+
+          /* Highlight shimmer */
+          const grd = ctx.createRadialGradient(
+            b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.05,
+            b.x, b.y, b.r
+          );
+          grd.addColorStop(0, 'rgba(255,255,255,0.18)');
+          grd.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fillStyle = grd;
+          ctx.fill();
+        });
+
+        requestAnimationFrame(draw);
+      }
+
+      draw();
+
+      /* Spawn floating food emoji on auth page */
+      function spawnFoodFloats() {
+        const page = document.getElementById('page-auth');
+        const bg = page?.querySelector('.auth-bg');
+        if (!bg) return;
+
+        // Clear old
+        bg.querySelectorAll('.food-float').forEach(el => el.remove());
+
+        const foods = ['🍛', '🥞', '🍚', '🍲', '🥗', '🍩', '🫕', '🎋', '🫓', '🥘'];
+        foods.forEach((f, i) => {
+          const el = document.createElement('span');
+          el.className = 'food-float';
+          el.textContent = f;
+          el.style.setProperty('--dur', `${7 + i * 1.1}s`);
+          el.style.setProperty('--delay', `${i * 0.7}s`);
+          el.style.left = `${8 + (i * 9) % 88}%`;
+          el.style.top = `${5 + (i * 7) % 45}%`;
+          bg.appendChild(el);
+        });
+      }
+
+      /* Run after app boots */
+      window.addEventListener('load', spawnFoodFloats);
+    })();
+  </script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function (reg) {
+            console.log('SW registered:', reg.scope);
+          })
+          .catch(function (err) {
+            console.log('SW error:', err);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>

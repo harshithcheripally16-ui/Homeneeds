@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>HomeNeeds Screenshot Generator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 32px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+
+    h1 {
+      color: #FC8019;
+      font-size: 1.8rem;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    p.sub {
+      color: #aaa;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #FC8019, #e06a0a);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 11px 24px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(252, 128, 25, 0.35);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, #60b246, #3d8c2a);
+      box-shadow: 0 4px 14px rgba(96, 178, 70, 0.35);
+    }
+
+    .btn-blue {
+      background: linear-gradient(135deg, #3d7cc9, #2a5a9e);
+      box-shadow: 0 4px 14px rgba(61, 124, 201, 0.35);
+    }
+
+    .btn-big {
+      font-size: 1rem;
+      padding: 14px 36px;
+      background: linear-gradient(135deg, #9b59b6, #6c3483);
+      box-shadow: 0 4px 14px rgba(155, 89, 182, 0.35);
+    }
+
+    .screens-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 24px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .screen-card {
+      background: #16161f;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .screen-card h3 {
+      font-size: 0.82rem;
+      color: #FC8019;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .screen-card canvas {
+      border-radius: 14px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      max-width: 100%;
+    }
+
+    .screen-card button {
+      width: 100%;
+      background: #FC8019;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 9px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .info {
+      background: #16161f;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 22px 28px;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .info h3 {
+      color: #FC8019;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+
+    .info ol {
+      padding-left: 20px;
+      color: #bbb;
+      font-size: 0.86rem;
+      line-height: 2;
+    }
+
+    .info code {
+      background: #2a2a3a;
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: #FC8019;
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div style="text-align:center">
+    <h1>📸 Screenshot Generator</h1>
+    <p class="sub">Generates 5 Play Store screenshots at 1080×1920px</p>
+  </div>
+
+  <div class="controls">
+    <button class="btn" onclick="renderAll()">🎨 Render All Screenshots</button>
+    <button class="btn btn-big" onclick="downloadAll()">⬇️ Download All 5 Screenshots</button>
+  </div>
+
+  <div class="screens-grid" id="screens-grid"></div>
+
+  <div class="info">
+    <h3>📁 After downloading:</h3>
+    <ol>
+      <li>Move all <code>screen*.png</code> files to <code>HomeNeeds/screenshots/</code></li>
+      <li>Upload them to Play Store under <strong>Store Listing → Screenshots</strong></li>
+      <li>Play Store requires minimum 2, maximum 8 screenshots</li>
+      <li>Each must be at least <code>320px</code> on the short side</li>
+    </ol>
+  </div>
+
+  <script>
+    var W = 1080;
+    var H = 1920;
+
+    /* Colour system */
+    var C = {
+      brand: '#FC8019',
+      brandD: '#e06a0a',
+      brandL: '#fda44f',
+      brandU: '#fff4eb',
+      green: '#60b246',
+      blue: '#3d7cc9',
+      bg: '#f7f7fb',
+      card: '#ffffff',
+      ink1: '#1a1a2e',
+      ink2: '#4a4a6a',
+      ink3: '#9090b0',
+      border: 'rgba(0,0,0,0.07)',
+      navBg: '#ffffff',
+      headerBg: 'rgba(255,255,255,0.95)'
+    };
+
+    /* ============================================================
+       HELPER UTILITIES
+    ============================================================ */
+    function roundRect(ctx, x, y, w, h, r) {
+      if (typeof r === 'number') r = [r, r, r, r];
+      ctx.beginPath();
+      ctx.moveTo(x + r[0], y);
+      ctx.lineTo(x + w - r[1], y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r[1]);
+      ctx.lineTo(x + w, y + h - r[2]);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r[2], y + h);
+      ctx.lineTo(x + r[3], y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r[3]);
+      ctx.lineTo(x, y + r[0]);
+      ctx.quadraticCurveTo(x, y, x + r[0], y);
+      ctx.closePath();
+    }
+
+    function pill(ctx, x, y, w, h, fill) {
+      ctx.fillStyle = fill;
+      roundRect(ctx, x, y, w, h, h / 2);
+      ctx.fill();
+    }
+
+    function text(ctx, str, x, y, size, color, weight, align) {
+      ctx.font = (weight || '600') + ' ' + size + 'px Poppins, Segoe UI, sans-serif';
+      ctx.fillStyle = color || C.ink1;
+      ctx.textAlign = align || 'left';
+      ctx.fillText(str, x, y);
+    }
+
+    function card(ctx, x, y, w, h, r, fill, shadow) {
+      if (shadow) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.10)';
+        ctx.shadowBlur = 40;
+        ctx.shadowOffsetY = 10;
+      }
+      ctx.fillStyle = fill || C.card;
+      roundRect(ctx, x, y, w, h, r || 32);
+      ctx.fill();
+      if (shadow) ctx.restore();
+    }
+
+    /* ── Draw phone frame ── */
+    function phoneFrame(ctx, bg) {
+      /* Background */
+      ctx.fillStyle = bg || C.bg;
+      ctx.fillRect(0, 0, W, H);
+
+      /* Animated bubble bg circles */
+      var bubbles = [
+        { x: 200, y: 380, r: 220, c: 'rgba(252,128,25,0.07)' },
+        { x: 900, y: 600, r: 180, c: 'rgba(96,178,70,0.06)' },
+        { x: 140, y: 1200, r: 160, c: 'rgba(61,124,201,0.06)' },
+        { x: 950, y: 1500, r: 200, c: 'rgba(252,128,25,0.05)' },
+        { x: 500, y: 900, r: 140, c: 'rgba(253,164,79,0.06)' },
+      ];
+      bubbles.forEach(function (b) {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fillStyle = b.c;
+        ctx.fill();
+      });
+    }
+
+    /* ── Draw glass header ── */
+    function drawHeader(ctx, title, sub) {
+      /* Header bg */
+      ctx.fillStyle = C.headerBg;
+      ctx.fillRect(0, 0, W, 180);
+
+      /* Gradient underline */
+      var grad = ctx.createLinearGradient(0, 178, W, 178);
+      grad.addColorStop(0, C.brand);
+      grad.addColorStop(0.4, C.brandL);
+      grad.addColorStop(0.7, C.green);
+      grad.addColorStop(1, C.blue);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 176, W, 4);
+
+      /* Avatar */
+      var grad2 = ctx.createLinearGradient(48, 52, 140, 144);
+      grad2.addColorStop(0, C.brand);
+      grad2.addColorStop(1, C.green);
+      ctx.fillStyle = grad2;
+      ctx.beginPath();
+      ctx.arc(96, 96, 56, 0, Math.PI * 2);
+      ctx.fill();
+
+      text(ctx, 'H', 96, 114, 52, '#fff', '800', 'center');
+
+      /* Greeting */
+      text(ctx, sub || 'Good Morning! ☀️', 180, 82, 34, C.ink2, '500');
+      text(ctx, title || 'HomeNeeds', 180, 130, 50, C.ink1, '800');
+
+      /* Settings icon */
+      ctx.fillStyle = 'rgba(240,240,246,0.9)';
+      ctx.beginPath();
+      ctx.arc(W - 72, 96, 44, 0, Math.PI * 2);
+      ctx.fill();
+      text(ctx, '⚙️', W - 72, 112, 42, C.ink1, '400', 'center');
+    }
+
+    /* ── Draw bottom nav ── */
+    function drawNav(ctx, active) {
+      var navH = 160;
+      var navY = H - navH - 40;
+
+      /* Nav pill */
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.15)';
+      ctx.shadowBlur = 50;
+      ctx.shadowOffsetY = -6;
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      roundRect(ctx, 40, navY, W - 80, navH, 40);
+      ctx.fill();
+      ctx.restore();
+
+      /* Border */
+      ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+      ctx.lineWidth = 2;
+      roundRect(ctx, 40, navY, W - 80, navH, 40);
+      ctx.stroke();
+
+      var items = [
+        { icon: '🏠', label: 'Home', page: 'dashboard' },
+        { icon: '🍛', label: 'Meals', page: 'meals' },
+        { icon: '🛒', label: 'Shopping', page: 'shopping' },
+      ];
+
+      var itemW = (W - 80) / items.length;
+
+      items.forEach(function (item, i) {
+        var cx = 40 + itemW * i + itemW / 2;
+        var isActive = item.page === active;
+
+        if (isActive) {
+          /* Active pill bg */
+          ctx.fillStyle = C.brandU;
+          roundRect(ctx, cx - 80, navY + 16, 160, navH - 32, 28);
+          ctx.fill();
+
+          /* Top bar */
+          ctx.fillStyle = C.brand;
+          roundRect(ctx, cx - 30, navY, 60, 6, 3);
+          ctx.fill();
+        }
+
+        text(ctx, item.icon, cx, navY + 76, 48, isActive ? C.brand : C.ink3, '400', 'center');
+        text(ctx, item.label, cx, navY + 130, 28, isActive ? C.brand : C.ink3, '700', 'center');
+      });
+    }
+
+    /* ============================================================
+       SCREEN 1 — Sign In
+    ============================================================ */
+    function drawScreen1(ctx) {
+      /* Warm gradient bg */
+      var bgGrad = ctx.createLinearGradient(0, 0, W, H);
+      bgGrad.addColorStop(0, '#ff6600');
+      bgGrad.addColorStop(0.35, '#FC8019');
+      bgGrad.addColorStop(0.65, '#ffa040');
+      bgGrad.addColorStop(1, '#fff4eb');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      /* Decorative circles */
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 70;
+      ctx.beginPath(); ctx.arc(-80, -80, 400, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(W + 80, 300, 320, 0, Math.PI * 2); ctx.stroke();
+
+      /* Floating food emojis */
+      var foods = ['🍛', '🥞', '🍚', '🍲', '🥗', '🍩', '🫕'];
+      foods.forEach(function (f, i) {
+        text(ctx, f, 80 + i * 140, 280 + Math.sin(i) * 60, 60, '', '400', 'left');
+      });
+
+      /* White card sheet */
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur = 80;
+      ctx.shadowOffsetY = -20;
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, 0, H * 0.38, W, H * 0.65, [60, 60, 0, 0]);
+      ctx.fill();
+      ctx.restore();
+
+      /* Pull handle */
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';
+      roundRect(ctx, W / 2 - 60, H * 0.38 + 24, 120, 8, 4);
+      ctx.fill();
+
+      /* Logo */
+      text(ctx, '🏠', W / 2, H * 0.38 + 130, 80, '', '400', 'center');
+      text(ctx, 'HomeNeeds', W / 2, H * 0.38 + 220, 72, C.brand, '900', 'center');
+      text(ctx, 'Your Daily Meal Companion', W / 2, H * 0.38 + 270, 34, C.ink2, '500', 'center');
+
+      /* Tab bar */
+      ctx.fillStyle = '#f0f0f6';
+      roundRect(ctx, 80, H * 0.38 + 310, W - 160, 90, 45);
+      ctx.fill();
+
+      ctx.fillStyle = C.brand;
+      roundRect(ctx, 88, H * 0.38 + 318, (W - 176) / 2, 74, 37);
+      ctx.fill();
+
+      text(ctx, 'Sign In', 80 + (W - 176) / 4, H * 0.38 + 372, 36, '#fff', '800', 'center');
+      text(ctx, 'Sign Up', W / 2 + (W - 176) / 4 + 8, H * 0.38 + 372, 36, C.ink3, '700', 'center');
+
+      /* Input fields */
+      var fy = H * 0.38 + 450;
+      ['👤  Username', '🔒  Password'].forEach(function (placeholder, i) {
+        ctx.fillStyle = '#f0f0f6';
+        roundRect(ctx, 80, fy + i * 130, W - 160, 100, 22);
+        ctx.fill();
+        ctx.strokeStyle = i === 0 ? C.brand : C.border;
+        ctx.lineWidth = i === 0 ? 3 : 2;
+        roundRect(ctx, 80, fy + i * 130, W - 160, 100, 22);
+        ctx.stroke();
+        text(ctx, placeholder, 130, fy + i * 130 + 62, 36, i === 0 ? C.ink1 : C.ink3, '500');
+        if (i === 0) {
+          /* Focus glow */
+          ctx.strokeStyle = 'rgba(252,128,25,0.18)';
+          ctx.lineWidth = 10;
+          roundRect(ctx, 75, fy - 5, W - 150, 110, 27);
+          ctx.stroke();
+        }
+      });
+
+      /* Sign In button */
+      var btnY = fy + 310;
+      var btnGrad = ctx.createLinearGradient(80, btnY, W - 80, btnY);
+      btnGrad.addColorStop(0, '#FC8019');
+      btnGrad.addColorStop(1, '#e06a0a');
+      ctx.fillStyle = btnGrad;
+      ctx.shadowColor = 'rgba(252,128,25,0.40)';
+      ctx.shadowBlur = 30;
+      roundRect(ctx, 80, btnY, W - 160, 108, 54);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      text(ctx, 'Sign In', W / 2, btnY + 68, 44, '#fff', '800', 'center');
+
+      text(ctx, "Don't have an account?  Sign Up", W / 2, btnY + 170, 32, C.ink2, '500', 'center');
+    }
+
+    /* ============================================================
+       SCREEN 2 — Dashboard
+    ============================================================ */
+    function drawScreen2(ctx) {
+      phoneFrame(ctx);
+      drawHeader(ctx, 'Priya Sharma', 'Good Morning! ☀️');
+
+      var y = 210;
+
+      /* Hero banner */
+      var hGrad = ctx.createLinearGradient(40, y, W - 40, y + 160);
+      hGrad.addColorStop(0, C.brand);
+      hGrad.addColorStop(1, C.brandL);
+      ctx.save();
+      ctx.shadowColor = 'rgba(252,128,25,0.30)';
+      ctx.shadowBlur = 36;
+      ctx.fillStyle = hGrad;
+      roundRect(ctx, 40, y, W - 80, 160, 36);
+      ctx.fill();
+      ctx.restore();
+
+      /* Ring decoration */
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 50;
+      ctx.beginPath();
+      ctx.arc(W - 80, y + 80, 130, 0, Math.PI * 2);
+      ctx.stroke();
+
+      text(ctx, 'Plan Your Week 🗓️', 80, y + 68, 42, '#fff', '900');
+      text(ctx, 'Tap any day to manage meals', 80, y + 118, 30, 'rgba(255,255,255,0.85)', '500');
+
+      y += 190;
+
+      /* Section title */
+      text(ctx, "This Week's Meals", 50, y + 50, 44, C.ink1, '800');
+      text(ctx, 'Tap a day to manage your meals', 50, y + 88, 30, C.ink2, '500');
+      y += 110;
+
+      /* Day cards grid */
+      var days = [
+        { n: 'Monday', d: '6 Jan', dots: ['brand', 'green'], count: 2, today: false },
+        { n: 'Tuesday', d: '7 Jan', dots: ['brand'], count: 1, today: true },
+        { n: 'Wednesday', d: '8 Jan', dots: [], count: 0, today: false },
+        { n: 'Thursday', d: '9 Jan', dots: ['green', 'blue'], count: 2, today: false },
+        { n: 'Friday', d: '10 Jan', dots: ['brand', 'green', 'blue'], count: 3, today: false },
+        { n: 'Saturday', d: '11 Jan', dots: [], count: 0, today: false },
+        { n: 'Sunday', d: '12 Jan', dots: ['brand'], count: 1, today: false, full: true },
+      ];
+
+      var colW = (W - 80 - 24) / 2;
+      var cardH = 230;
+      var col = 0;
+      var row = 0;
+
+      days.forEach(function (d, i) {
+        if (d.full) {
+          /* Full-width Sunday */
+          var cx = 40;
+          var cy = y + row * (cardH + 20);
+          var cw = W - 80;
+          var ch = 170;
+
+          ctx.save();
+          ctx.shadowColor = 'rgba(0,0,0,0.08)'; ctx.shadowBlur = 30;
+          ctx.fillStyle = C.card;
+          roundRect(ctx, cx, cy, cw, ch, 32);
+          ctx.fill();
+          ctx.restore();
+
+          /* Top stripe */
+          var sg = ctx.createLinearGradient(cx, cy, cx + cw, cy);
+          sg.addColorStop(0, C.brand); sg.addColorStop(1, C.brandL);
+          ctx.fillStyle = sg;
+          roundRect(ctx, cx, cy, cw, 6, [32, 32, 0, 0]);
+          ctx.fill();
+
+          text(ctx, d.n, cx + 36, cy + 80, 38, C.ink1, '800');
+          text(ctx, d.d, cx + 36, cy + 118, 26, C.ink2, '500');
+          text(ctx, d.count > 0 ? d.count + ' meal planned' : 'No meals planned',
+            cx + cw - 50, cy + 98, 26, C.ink2, '600', 'right');
+          return;
+        }
+
+        var cx = 40 + col * (colW + 24);
+        var cy = y + row * (cardH + 20);
+
+        ctx.save();
+        ctx.shadowColor = d.today ? 'rgba(252,128,25,0.22)' : 'rgba(0,0,0,0.07)';
+        ctx.shadowBlur = d.today ? 30 : 20;
+
+        if (d.today) {
+          var tg = ctx.createLinearGradient(cx, cy, cx + colW, cy + cardH);
+          tg.addColorStop(0, '#fff4eb');
+          tg.addColorStop(1, C.card);
+          ctx.fillStyle = tg;
+        } else {
+          ctx.fillStyle = C.card;
+        }
+        roundRect(ctx, cx, cy, colW, cardH, 32);
+        ctx.fill();
+        ctx.restore();
+
+        /* Border */
+        if (d.today) {
+          ctx.strokeStyle = C.brand;
+          ctx.lineWidth = 3;
+          roundRect(ctx, cx, cy, colW, cardH, 32);
+          ctx.stroke();
+        }
+
+        /* Top stripe */
+        ctx.fillStyle = C.brand;
+        roundRect(ctx, cx, cy, colW, 5, [32, 32, 0, 0]);
+        ctx.fill();
+
+        text(ctx, d.n, cx + 24, cy + 68, 34, C.ink1, '800');
+        text(ctx, d.d, cx + 24, cy + 100, 24, C.ink2, '500');
+
+        if (d.today) {
+          pill(ctx, cx + colW - 120, cy + 24, 96, 36, C.brand);
+          text(ctx, 'Today', cx + colW - 72, cy + 50, 22, '#fff', '800', 'center');
+        }
+
+        /* Dots */
+        var dotColors = { brand: C.brand, green: C.green, blue: C.blue };
+        d.dots.forEach(function (dc, di) {
+          ctx.fillStyle = dotColors[dc];
+          ctx.beginPath();
+          ctx.arc(cx + 24 + di * 28, cy + 152, 10, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        text(ctx, d.count > 0 ? d.count + ' meal' + (d.count > 1 ? 's' : '') + ' planned' : 'No meals planned',
+          cx + 24, cy + 198, 22, C.ink2, '600');
+
+        col++;
+        if (col === 2) { col = 0; row++; }
+      });
+
+      drawNav(ctx, 'dashboard');
+    }
+
+    /* ============================================================
+       SCREEN 3 — Meals Page
+    ============================================================ */
+    function drawScreen3(ctx) {
+      phoneFrame(ctx);
+
+      /* Header */
+      ctx.fillStyle = C.headerBg;
+      ctx.fillRect(0, 0, W, 180);
+      var hg = ctx.createLinearGradient(0, 178, W, 178);
+      hg.addColorStop(0, C.brand); hg.addColorStop(0.5, C.brandL);
+      hg.addColorStop(1, C.green);
+      ctx.fillStyle = hg;
+      ctx.fillRect(0, 176, W, 4);
+
+      /* Back btn */
+      ctx.fillStyle = '#f0f0f6';
+      ctx.beginPath(); ctx.arc(80, 96, 44, 0, Math.PI * 2); ctx.fill();
+      text(ctx, '←', 80, 112, 40, C.ink1, '700', 'center');
+
+      text(ctx, 'Meal Plan', 160, 76, 30, C.ink2, '500');
+      text(ctx, 'Tuesday', 160, 128, 52, C.ink1, '800');
+
+      /* Settings */
+      ctx.fillStyle = '#f0f0f6';
+      ctx.beginPath(); ctx.arc(W - 80, 96, 44, 0, Math.PI * 2); ctx.fill();
+      text(ctx, '⚙️', W - 80, 112, 40, C.ink1, '400', 'center');
+
+      var y = 210;
+
+      var meals = [
+        {
+          key: 'breakfast', label: 'Breakfast', icon: '🌅', time: '7:00 – 9:00 AM',
+          color: C.brand, colorLight: 'rgba(252,128,25,0.07)',
+          shadow: 'rgba(252,128,25,0.18)',
+          dishes: [
+            { name: 'Masala Dosa', emoji: '🥞', ings: ['Rice batter', 'Urad dal', 'Potato', 'Onion', 'Mustard seeds', 'Curry leaves'] },
+          ]
+        },
+        {
+          key: 'lunch', label: 'Lunch', icon: '☀️', time: '12:00 – 2:00 PM',
+          color: C.green, colorLight: 'rgba(96,178,70,0.07)',
+          shadow: 'rgba(96,178,70,0.18)',
+          dishes: [
+            { name: 'Sambar Rice', emoji: '🍛', ings: ['Rice', 'Toor dal', 'Tamarind', 'Tomatoes', 'Sambar powder'] },
+          ]
+        },
+        {
+          key: 'dinner', label: 'Dinner', icon: '🌙', time: '7:00 – 9:00 PM',
+          color: C.blue, colorLight: 'rgba(61,124,201,0.07)',
+          shadow: 'rgba(61,124,201,0.18)',
+          dishes: []
+        }
+      ];
+
+      meals.forEach(function (meal) {
+        var sectionH = meal.dishes.length > 0 ? 420 : 240;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.08)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 8;
+        ctx.fillStyle = 'rgba(255,255,255,0.90)';
+        roundRect(ctx, 40, y, W - 80, sectionH, 36);
+        ctx.fill();
+        ctx.restore();
+
+        /* Header strip */
+        ctx.fillStyle = meal.colorLight;
+        roundRect(ctx, 40, y, W - 80, 130, [36, 36, 0, 0]);
+        ctx.fill();
+
+        /* Bottom border of header */
+        ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(40, y + 130); ctx.lineTo(W - 40, y + 130); ctx.stroke();
+
+        /* Meal icon */
+        var ig = ctx.createLinearGradient(76, y + 28, 76 + 80, y + 108);
+        ig.addColorStop(0, meal.color); ig.addColorStop(1, meal.color);
+        ctx.fillStyle = ig;
+        ctx.shadowColor = meal.shadow; ctx.shadowBlur = 20;
+        roundRect(ctx, 76, y + 26, 80, 80, 18);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        text(ctx, meal.icon, 116, y + 84, 44, '', '400', 'center');
+
+        text(ctx, meal.label, 186, y + 68, 40, C.ink1, '800');
+        text(ctx, meal.time, 186, y + 104, 26, C.ink2, '600');
+
+        /* Add button */
+        ctx.fillStyle = meal.color;
+        ctx.shadowColor = meal.shadow; ctx.shadowBlur = 20;
+        ctx.beginPath(); ctx.arc(W - 80, y + 66, 38, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        text(ctx, '+', W - 80, y + 82, 44, '#fff', '700', 'center');
+
+        /* Dropdown strip */
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        roundRect(ctx, 40, y + 130, W - 80, 90, 0);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(40, y + 220); ctx.lineTo(W - 40, y + 220); ctx.stroke();
+
+        ctx.fillStyle = '#f0f0f6';
+        roundRect(ctx, 72, y + 148, W - 144, 60, 16);
+        ctx.fill();
+        text(ctx, '— Choose a South Indian dish —', 100, y + 186, 28, C.ink3, '500');
+
+        /* Dish card */
+        if (meal.dishes.length > 0) {
+          var d = meal.dishes[0];
+          var dy = y + 232;
+
+          ctx.fillStyle = C.card;
+          ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+          ctx.lineWidth = 2;
+          roundRect(ctx, 60, dy, W - 120, 176, 24);
+          ctx.fill(); ctx.stroke();
+
+          /* Dish emoji box */
+          ctx.fillStyle = '#f0f0f6';
+          roundRect(ctx, 80, dy + 20, 100, 100, 18);
+          ctx.fill();
+          text(ctx, d.emoji, 130, dy + 88, 56, '', '400', 'center');
+
+          text(ctx, d.name, 204, dy + 64, 36, C.ink1, '800');
+          text(ctx, d.ings.slice(0, 3).join(' · '), 204, dy + 102, 24, C.ink2, '500');
+
+          /* Delete */
+          ctx.fillStyle = '#ffebee';
+          ctx.beginPath(); ctx.arc(W - 84, dy + 58, 28, 0, Math.PI * 2); ctx.fill();
+          text(ctx, '🗑️', W - 84, dy + 74, 28, '', '400', 'center');
+
+          /* Ingredient chips */
+          var chipX = 80; var chipY = dy + 134;
+          d.ings.forEach(function (ing, ii) {
+            var chipW = ing.length * 17 + 40;
+            if (chipX + chipW > W - 80) { chipX = 80; chipY += 52; }
+            ctx.fillStyle = ii === 0 ? 'rgba(252,128,25,0.10)' : '#f0f0f6';
+            ctx.strokeStyle = ii === 0 ? C.brand : 'rgba(0,0,0,0.10)';
+            ctx.lineWidth = ii === 0 ? 2 : 1.5;
+            roundRect(ctx, chipX, chipY, chipW, 44, 22);
+            ctx.fill(); ctx.stroke();
+            text(ctx, (ii === 0 ? '🛒 ' : '✅ ') + ing, chipX + 12, chipY + 30, 22,
+              ii === 0 ? C.brand : C.ink1, '700');
+            chipX += chipW + 14;
+          });
+        }
+
+        y += sectionH + 24;
+      });
+
+      drawNav(ctx, 'meals');
+    }
+
+    /* ============================================================
+       SCREEN 4 — Shopping List
+    ============================================================ */
+    function drawScreen4(ctx) {
+      phoneFrame(ctx);
+
+      /* Header */
+      ctx.fillStyle = C.headerBg;
+      ctx.fillRect(0, 0, W, 180);
+      var hg = ctx.createLinearGradient(0, 178, W, 178);
+      hg.addColorStop(0, C.brand); hg.addColorStop(0.5, C.green); hg.addColorStop(1, C.blue);
+      ctx.fillStyle = hg;
+      ctx.fillRect(0, 176, W, 4);
+
+      ctx.fillStyle = '#f0f0f6';
+      ctx.beginPath(); ctx.arc(80, 96, 44, 0, Math.PI * 2); ctx.fill();
+      text(ctx, '←', 80, 112, 40, C.ink1, '700', 'center');
+      text(ctx, 'Grocery', 160, 76, 30, C.ink2, '500');
+      text(ctx, 'Shopping List', 160, 128, 48, C.ink1, '800');
+      ctx.fillStyle = '#f0f0f6';
+      ctx.beginPath(); ctx.arc(W - 80, 96, 44, 0, Math.PI * 2); ctx.fill();
+      text(ctx, '⚙️', W - 80, 112, 40, C.ink1, '400', 'center');
+
+      var y = 210;
+
+      /* Summary cards */
+      var stats = [{ icon: '📋', val: '8', label: 'Total', col: C.brand }, { icon: '✅', val: '3', label: 'Bought', col: C.green }, { icon: '⏳', val: '5', label: 'Remaining', col: C.blue }];
+      var sw = (W - 80 - 40) / 3;
+      stats.forEach(function (s, i) {
+        var sx = 40 + i * (sw + 20);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.07)'; ctx.shadowBlur = 20;
+        ctx.fillStyle = C.card;
+        roundRect(ctx, sx, y, sw, 170, 28);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = s.col;
+        roundRect(ctx, sx, y, sw, 5, [28, 28, 0, 0]);
+        ctx.fill();
+
+        text(ctx, s.icon, sx + sw / 2, y + 80, 44, '', '400', 'center');
+        text(ctx, s.val, sx + sw / 2, y + 130, 48, s.col, '900', 'center');
+        text(ctx, s.label, sx + sw / 2, y + 160, 24, C.ink2, '700', 'center');
+      });
+
+      y += 195;
+
+      /* Filter */
+      ctx.fillStyle = '#f0f0f6';
+      roundRect(ctx, 40, y, W - 80, 80, 40);
+      ctx.fill();
+
+      ['All', 'Pending', 'Bought'].forEach(function (f, i) {
+        var fw = (W - 80 - 20) / 3; var fx = 46 + i * (fw + 7);
+        if (i === 0) {
+          ctx.fillStyle = C.brand;
+          ctx.shadowColor = 'rgba(252,128,25,0.30)'; ctx.shadowBlur = 14;
+          roundRect(ctx, fx, y + 6, fw, 68, 34);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          text(ctx, f, fx + fw / 2, y + 50, 30, '#fff', '800', 'center');
+        } else {
+          text(ctx, f, fx + fw / 2, y + 50, 30, C.ink2, '700', 'center');
+        }
+      });
+
+      y += 108;
+
+      /* Shopping groups */
+      var groups = [
+        {
+          dish: 'Masala Dosa', day: 'Tuesday · Breakfast', items: [
+            { name: 'Rice batter', bought: true },
+            { name: 'Potato', bought: false },
+            { name: 'Onion', bought: false },
+          ]
+        },
+        {
+          dish: 'Sambar Rice', day: 'Tuesday · Lunch', items: [
+            { name: 'Tamarind', bought: true },
+            { name: 'Sambar powder', bought: false },
+          ]
+        },
+      ];
+
+      groups.forEach(function (g) {
+        var gh = 90 + g.items.length * 90;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.07)'; ctx.shadowBlur = 24;
+        ctx.fillStyle = 'rgba(255,255,255,0.90)';
+        roundRect(ctx, 40, y, W - 80, gh, 28);
+        ctx.fill();
+        ctx.restore();
+
+        /* Group header */
+        ctx.fillStyle = 'rgba(252,128,25,0.06)';
+        roundRect(ctx, 40, y, W - 80, 78, [28, 28, 0, 0]);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(40, y + 78); ctx.lineTo(W - 40, y + 78); ctx.stroke();
+
+        text(ctx, '🍽️ ' + g.dish, 76, y + 44, 34, C.ink1, '800');
+        text(ctx, g.day, 76, y + 72, 24, C.ink2, '600');
+
+        g.items.forEach(function (item, ii) {
+          var iy = y + 78 + ii * 88;
+          ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+          ctx.lineWidth = 1;
+          if (ii > 0) { ctx.beginPath(); ctx.moveTo(76, iy); ctx.lineTo(W - 76, iy); ctx.stroke(); }
+
+          /* Checkbox */
+          if (item.bought) {
+            ctx.fillStyle = C.green;
+            ctx.beginPath(); ctx.arc(100, iy + 44, 22, 0, Math.PI * 2); ctx.fill();
+            text(ctx, '✓', 100, iy + 53, 26, '#fff', '900', 'center');
+          } else {
+            ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(100, iy + 44, 22, 0, Math.PI * 2); ctx.stroke();
+          }
+
+          text(ctx, item.name, 144, iy + 53, 32,
+            item.bought ? C.ink3 : C.ink1, item.bought ? '500' : '700');
+          if (item.bought) {
+            ctx.strokeStyle = C.ink3;
+            ctx.lineWidth = 2;
+            var tw = ctx.measureText(item.name).width;
+            ctx.beginPath();
+            ctx.moveTo(144, iy + 46);
+            ctx.lineTo(144 + tw * 0.8, iy + 46);
+            ctx.stroke();
+          }
+
+          /* Return button */
+          ctx.fillStyle = 'rgba(96,178,70,0.12)';
+          ctx.beginPath(); ctx.arc(W - 90, iy + 44, 28, 0, Math.PI * 2); ctx.fill();
+          text(ctx, '↩️', W - 90, iy + 58, 30, '', '400', 'center');
+        });
+
+        y += gh + 20;
+      });
+
+      drawNav(ctx, 'shopping');
+    }
+
+    /* ============================================================
+       SCREEN 5 — Settings Panel
+    ============================================================ */
+    function drawScreen5(ctx) {
+      phoneFrame(ctx);
+
+      /* Dimmed main page behind */
+      ctx.fillStyle = 'rgba(15,15,30,0.55)';
+      ctx.fillRect(0, 0, W * 0.18, H);
+
+      /* Settings panel */
+      var panelX = W * 0.18;
+      var panelW = W - panelX;
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.40)'; ctx.shadowBlur = 80; ctx.shadowOffsetX = -20;
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.fillRect(panelX, 0, panelW, H);
+      ctx.restore();
+
+      /* Animated left edge strip */
+      var strip = ctx.createLinearGradient(panelX, 0, panelX, H);
+      strip.addColorStop(0, C.brand);
+      strip.addColorStop(0.4, C.green);
+      strip.addColorStop(0.7, C.blue);
+      strip.addColorStop(1, C.brand);
+      ctx.fillStyle = strip;
+      ctx.fillRect(panelX, 0, 5, H);
+
+      /* Panel header */
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.fillRect(panelX, 0, panelW, 160);
+      ctx.strokeStyle = 'rgba(0,0,0,0.07)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(panelX, 160); ctx.lineTo(W, 160); ctx.stroke();
+
+      text(ctx, 'Settings', panelX + 44, 110, 58, C.ink1, '900');
+
+      /* Close btn */
+      ctx.fillStyle = '#f0f0f6';
+      ctx.beginPath(); ctx.arc(W - 60, 84, 36, 0, Math.PI * 2); ctx.fill();
+      text(ctx, '✕', W - 60, 98, 32, C.ink2, '700', 'center');
+
+      var y = 180;
+
+      /* Profile card */
+      ctx.save();
+      var pcGrad = ctx.createLinearGradient(panelX + 30, y + 20, W - 30, y + 200);
+      pcGrad.addColorStop(0, '#fff4eb'); pcGrad.addColorStop(1, '#ffffff');
+      ctx.shadowColor = 'rgba(252,128,25,0.18)'; ctx.shadowBlur = 30;
+      ctx.fillStyle = pcGrad;
+      roundRect(ctx, panelX + 30, y + 20, panelW - 60, 190, 36);
+      ctx.fill();
+      ctx.restore();
+
+      /* Avatar */
+      var ag = ctx.createLinearGradient(panelX + 70, y + 50, panelX + 70 + 120, y + 50 + 120);
+      ag.addColorStop(0, C.brand); ag.addColorStop(1, C.green);
+      ctx.fillStyle = ag;
+      ctx.shadowColor = 'rgba(252,128,25,0.30)'; ctx.shadowBlur = 20;
+      ctx.beginPath(); ctx.arc(panelX + 130, y + 116, 68, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      text(ctx, 'P', panelX + 130, y + 140, 56, '#fff', '900', 'center');
+
+      /* Camera badge */
+      ctx.fillStyle = C.brand;
+      ctx.beginPath(); ctx.arc(panelX + 177, y + 158, 22, 0, Math.PI * 2); ctx.fill();
+      text(ctx, '📷', panelX + 177, y + 168, 20, '', '400', 'center');
+
+      text(ctx, 'Priya Sharma', panelX + 220, y + 102, 36, C.ink1, '800');
+      text(ctx, '@priyasharma', panelX + 220, y + 140, 28, C.ink2, '600');
+
+      y += 230;
+
+      /* Section: Appearance */
+      text(ctx, '🎨  APPEARANCE', panelX + 44, y + 44, 24, C.ink3, '900');
+      y += 60;
+
+      /* Theme row */
+      ctx.fillStyle = C.card;
+      ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 2;
+      roundRect(ctx, panelX + 30, y, panelW - 60, 110, 24);
+      ctx.fill(); ctx.stroke();
+
+      text(ctx, 'Theme', panelX + 64, y + 50, 30, C.ink1, '800');
+      text(ctx, 'Switch light / dark', panelX + 64, y + 78, 24, C.ink2, '500');
+
+      /* Toggle */
+      ctx.fillStyle = '#f0f0f6';
+      roundRect(ctx, W - 280, y + 28, 220, 60, 30);
+      ctx.fill();
+      ctx.fillStyle = C.brand;
+      ctx.shadowColor = 'rgba(252,128,25,0.35)'; ctx.shadowBlur = 14;
+      roundRect(ctx, W - 276, y + 32, 102, 52, 26);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      text(ctx, '☀️ Light', W - 225, y + 66, 22, '#fff', '800', 'center');
+      text(ctx, '🌙 Dark', W - 126, y + 66, 22, C.ink2, '700', 'center');
+
+      y += 130;
+
+      /* Text size row */
+      ctx.fillStyle = C.card;
+      ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 2;
+      roundRect(ctx, panelX + 30, y, panelW - 60, 200, 24);
+      ctx.fill(); ctx.stroke();
+
+      text(ctx, 'Text Size', panelX + 64, y + 50, 30, C.ink1, '800');
+      text(ctx, 'Range: 12px – 22px', panelX + 64, y + 78, 24, C.ink2, '500');
+
+      /* Badge */
+      ctx.fillStyle = C.brand;
+      ctx.shadowColor = 'rgba(252,128,25,0.35)'; ctx.shadowBlur = 12;
+      roundRect(ctx, W - 200, y + 28, 140, 52, 26);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      text(ctx, '16px', W - 130, y + 62, 28, '#fff', '900', 'center');
+
+      /* Slider track */
+      var slX = panelX + 44 + 52; var slY = y + 134; var slW = panelW - 120 - 52;
+      ctx.fillStyle = '#e8e8f0';
+      roundRect(ctx, slX, slY - 6, slW, 12, 6);
+      ctx.fill();
+
+      /* Filled portion */
+      var fillW = slW * 0.4;
+      ctx.fillStyle = C.brand;
+      roundRect(ctx, slX, slY - 6, fillW, 12, 6);
+      ctx.fill();
+
+      /* Thumb */
+      ctx.fillStyle = C.brand;
+      ctx.shadowColor = 'rgba(252,128,25,0.45)'; ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.arc(slX + fillW, slY, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(slX + fillW, slY, 10, 0, Math.PI * 2); ctx.fill();
+
+      /* Step buttons */
+      ctx.strokeStyle = C.brand; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(panelX + 44 + 26, slY, 26, 0, Math.PI * 2); ctx.stroke();
+      text(ctx, '−', panelX + 44 + 26, slY + 10, 32, C.brand, '900', 'center');
+
+      ctx.beginPath(); ctx.arc(panelX + 44 + slW + 78, slY, 26, 0, Math.PI * 2); ctx.stroke();
+      text(ctx, '+', panelX + 44 + slW + 78, slY + 10, 32, C.brand, '900', 'center');
+
+      /* Range labels */
+      text(ctx, 'A (12px)', slX, slY + 50, 22, C.ink3, '700');
+      text(ctx, 'A (22px)', slX + slW, slY + 50, 30, C.ink3, '700', 'right');
+
+      y += 220;
+
+      /* Section: Account */
+      text(ctx, '👤  ACCOUNT', panelX + 44, y + 44, 24, C.ink3, '900');
+      y += 60;
+
+      /* Account group */
+      var actions = ['✏️  Change Username', '📷  Update Profile Photo', '🔄  Switch Account', '🗑️  Delete Account'];
+      var groupH = actions.length * 96;
+
+      ctx.fillStyle = C.card;
+      ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 2;
+      roundRect(ctx, panelX + 30, y, panelW - 60, groupH, 24);
+      ctx.fill(); ctx.stroke();
+
+      actions.forEach(function (action, i) {
+        var ay = y + i * 96;
+        if (i > 0) {
+          ctx.strokeStyle = 'rgba(0,0,0,0.05)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(panelX + 56, ay); ctx.lineTo(W - 56, ay); ctx.stroke();
+        }
+        var isRed = i === 3;
+        text(ctx, action, panelX + 64, ay + 60, 28, isRed ? '#f44336' : C.ink1, '700');
+        text(ctx, '›', W - 64, ay + 60, 36, C.ink3, '700', 'right');
+      });
+
+      y += groupH + 40;
+
+      /* Sign out */
+      ctx.strokeStyle = 'rgba(244,67,54,0.25)'; ctx.lineWidth = 2.5;
+      ctx.fillStyle = 'rgba(244,67,54,0.06)';
+      roundRect(ctx, panelX + 30, y, panelW - 60, 96, 48);
+      ctx.fill(); ctx.stroke();
+      text(ctx, 'Sign Out', panelX + 30 + (panelW - 60) / 2, y + 60, 36, '#f44336', '800', 'center');
+    }
+
+    /* ============================================================
+       SCREEN REGISTRY
+    ============================================================ */
+    var screens = [
+      { id: 'screen1', name: '1. Sign In', fn: drawScreen1, file: 'screen1.png' },
+      { id: 'screen2', name: '2. Dashboard', fn: drawScreen2, file: 'screen2.png' },
+      { id: 'screen3', name: '3. Meals', fn: drawScreen3, file: 'screen3.png' },
+      { id: 'screen4', name: '4. Shopping List', fn: drawScreen4, file: 'screen4.png' },
+      { id: 'screen5', name: '5. Settings', fn: drawScreen5, file: 'screen5.png' },
+    ];
+
+    function renderAll() {
+      var grid = document.getElementById('screens-grid');
+      grid.innerHTML = '';
+
+      screens.forEach(function (s) {
+        var canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        var ctx = canvas.getContext('2d');
+        s.fn(ctx);
+
+        /* Display version */
+        var displayCanvas = document.createElement('canvas');
+        displayCanvas.width = 200;
+        displayCanvas.height = Math.round(200 * H / W);
+        var dCtx = displayCanvas.getContext('2d');
+        dCtx.drawImage(canvas, 0, 0, displayCanvas.width, displayCanvas.height);
+
+        var card = document.createElement('div');
+        card.className = 'screen-card';
+
+        var title = document.createElement('h3');
+        title.textContent = s.name;
+
+        var btn = document.createElement('button');
+        btn.textContent = '⬇️ Download';
+        btn.onclick = (function (sc, cv) {
+          return function () {
+            var link = document.createElement('a');
+            link.download = sc.file;
+            link.href = cv.toDataURL('image/png');
+            link.click();
+          };
+        })(s, canvas);
+
+        card.appendChild(title);
+        card.appendChild(displayCanvas);
+        card.appendChild(btn);
+        grid.appendChild(card);
+
+        /* Store canvas ref for downloadAll */
+        s._canvas = canvas;
+      });
+    }
+
+    function downloadAll() {
+      if (!screens[0]._canvas) renderAll();
+      var delay = 0;
+      screens.forEach(function (s) {
+        setTimeout(function () {
+          var link = document.createElement('a');
+          link.download = s.file;
+          link.href = s._canvas.toDataURL('image/png');
+          link.click();
+        }, delay);
+        delay += 500;
+      });
+    }
+
+    window.onload = function () { renderAll(); };
+  </script>
+</body>
+
+</html>
